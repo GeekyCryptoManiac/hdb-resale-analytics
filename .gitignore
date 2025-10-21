@@ -1,22 +1,49 @@
+# Environment Variables (CONTAINS PASSWORDS!)
+backend/.env
+.env
+
 # Dependencies
 node_modules/
-package-lock.json
-# Environment variables
-.env
-.env.local
+backend/node_modules/
+frontend/node_modules/
+
+# Large Data Files
+database/data/*.csv
+database/data/*.xlsx
+*.csv
+*.xlsx
+
+# Database dumps (optional - these can be large)
+*.sql.gz
+*.dump
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # IDE
 .vscode/
 .idea/
-
-# OS files
-.DS_Store
-Thumbs.db
+*.swp
+*.swo
+*~
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 
-# Build files
-dist/
-build/
+# Build outputs (for later when you build React)
+frontend/build/
+frontend/dist/
+backend/dist/
+
+# Temporary files
+tmp/
+temp/
