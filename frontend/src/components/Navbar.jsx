@@ -19,15 +19,15 @@ function Navbar() {
         <BootstrapNavbar.Brand as={Link} to="/search">
           🏠 HDB Analytics
         </BootstrapNavbar.Brand>
-        
+
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
-        
+
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/search">Search</Nav.Link>
             <Nav.Link as={Link} to="/analytics">Analytics</Nav.Link>
           </Nav>
-          
+
           <Nav className="ms-auto">
             {user ? (
               <>
@@ -42,7 +42,10 @@ function Navbar() {
                 </Button>
               </>
             ) : (
-              <Nav.Link as={Link} to="/login">Login</Nav.Link>
+              <>
+                <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                <Nav.Link as={Link} to="/register">Register</Nav.Link>
+              </>
             )}
           </Nav>
         </BootstrapNavbar.Collapse>

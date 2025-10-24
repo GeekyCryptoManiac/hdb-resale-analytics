@@ -1,19 +1,20 @@
-// src/pages/LoginPage.jsx
+// src/pages/RegisterPage.jsx
 import React, { useState, useContext } from "react";
 import { Container, Card, Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-function LoginPage() {
+function RegisterPage() {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(email, password);
-    navigate("/");
+    await register(email, name, password);
+    navigate("/login"); // after registration, go to login
   };
 
   return (
@@ -21,7 +22,7 @@ function LoginPage() {
       <Card className="mx-auto" style={{ maxWidth: "500px" }}>
         <Card.Body>
           <Card.Title className="text-center mb-4">
-            <h2>Login</h2>
+            <h2>Register</h2>
           </Card.Title>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="formEmail">
@@ -31,6 +32,17 @@ function LoginPage() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formName">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </Form.Group>
@@ -46,8 +58,8 @@ function LoginPage() {
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100">
-              Login
+            <Button variant="success" type="submit" className="w-100">
+              Register
             </Button>
           </Form>
         </Card.Body>
@@ -56,4 +68,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default RegisterPage;
