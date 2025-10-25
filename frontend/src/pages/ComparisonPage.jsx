@@ -4,19 +4,43 @@ import { Container, Card, Table, Button } from "react-bootstrap";
 import { AuthContext } from "../context/AuthContext";
 
 function ComparisonPage() {
-  const { user, token } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
   const [comparisons, setComparisons] = useState([]);
 
   useEffect(() => {
     if (token) {
-      fetch("/api/comparisons", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setComparisons(data))
-        .catch((err) => console.error("Error fetching comparisons:", err));
+      const fetchComparisons = async () => {
+        try {
+          const res = await fetch("/api/comparisons", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          setComparisons(data);
+        } catch (err) {
+          console.error("Error fetching comparisons:", err);
+        }
+      };
+
+      fetchComparisons();
     }
   }, [token]);
+
+  const handleRemove = async (id) => {
+    try {
+      const res = await fetch(`/api/comparisons/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setComparisons(comparisons.filter((c) => c._id !== id));
+      } else {
+        console.error("Failed to remove comparison");
+      }
+    } catch (err) {
+      console.error("Error removing comparison:", err);
+    }
+  };
 
   if (!token) {
     return (
@@ -59,7 +83,11 @@ function ComparisonPage() {
                 <td>{c.flat_type}</td>
                 <td>${c.resale_price}</td>
                 <td>
-                  <Button variant="danger" size="sm">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleRemove(c._id)}
+                  >
                     Remove
                   </Button>
                 </td>

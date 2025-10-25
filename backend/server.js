@@ -9,6 +9,9 @@ const townRoutes = require('./src/routes/townRoutes');
 const flatTypeRoutes = require('./src/routes/flatTypeRoutes');
 const propertyRoutes = require('./src/routes/propertyRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const authRoutes = require('./src/routes/authRoutes');
+
+
 
 // Initialize Express app
 const app = express();
@@ -36,6 +39,19 @@ app.use((req, res, next) => {
 // ============================================
 // ROUTES
 // ============================================
+
+// Login Route
+app.use('/api/auth', authRoutes);
+
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("✅ MongoDB Atlas connected"))
+.catch(err => console.error("❌ MongoDB Atlas connection error:", err));
+
 
 // Health check endpoint
 app.get('/', (req, res) => {

@@ -1,19 +1,26 @@
 // src/pages/LoginPage.jsx
 import React, { useState, useContext } from "react";
-import { Container, Card, Form, Button } from "react-bootstrap";
+import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // src/pages/LoginPage.jsx
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(email, password);
-    navigate("/");
+    setError(null);
+    try {
+      await login(email, password);
+      navigate("/me");   // 👈 redirect to user details page
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -23,6 +30,9 @@ function LoginPage() {
           <Card.Title className="text-center mb-4">
             <h2>Login</h2>
           </Card.Title>
+
+          {error && <Alert variant="danger">{error}</Alert>}
+
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>

@@ -15,24 +15,26 @@ export function AuthProvider({ children }) {
 
   // Login with email + password
   const login = async (email, password) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
 
-    if (!res.ok) {
-      throw new Error("Login failed");
-    }
+  const data = await res.json();
 
-    const data = await res.json();
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-  };
+  if (!res.ok) {
+    throw new Error(data.error || "Login failed");
+  }
 
-  // Register new user
+  setToken(data.token);
+  setUser(data.user);
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
+};
+
+
+  // Register new user (auto-login)
   const register = async (email, name, password) => {
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -44,7 +46,17 @@ export function AuthProvider({ children }) {
       throw new Error("Registration failed");
     }
 
-    return await res.json();
+    const data = await res.json();
+
+    // if backend also returns token + user, store them
+    if (data.token && data.user) {
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+
+    return data;
   };
 
   // Logout clears everything

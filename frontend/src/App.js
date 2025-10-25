@@ -18,6 +18,7 @@ import ResultsPage from "./pages/ResultsPage";
 import PropertyDetailPage from "./pages/PropertyDetailPage";
 import ComparisonPage from "./pages/ComparisonPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import UserDetailsPage from "./pages/UserDetailsPage";
 
 function App() {
   return (
@@ -42,6 +43,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ComparisonPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/me"
+              element={
+                <ProtectedRoute>
+                  <UserDetailsPage />
                 </ProtectedRoute>
               }
             />
