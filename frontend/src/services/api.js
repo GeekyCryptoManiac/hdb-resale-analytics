@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Base URL for backend API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -130,28 +130,36 @@ export const getFlatTypeById = async (flatTypeId) => {
 /**
  * Search properties with filters
  * @param {Object} filters - Search filters
- * @param {Array<string>} filters.towns - Array of town names
- * @param {Array<string>} filters.flatTypes - Array of flat type names
- * @param {number} filters.minPrice - Minimum price
- * @param {number} filters.maxPrice - Maximum price
- * @param {number} filters.minFloorArea - Minimum floor area
- * @param {number} filters.maxFloorArea - Maximum floor area
- * @param {number} filters.minRemainingLease - Minimum remaining lease years
- * @param {string} filters.sortBy - Sort field
- * @param {string} filters.sortOrder - Sort order (ASC/DESC)
- * @param {number} filters.limit - Results per page
- * @param {number} filters.page - Page number
- * @returns {Promise} Object with properties array and pagination info
+ * @param {Array|string} filters.towns - Array or single town name
+ * @param {Array|string} filters.flatTypes - Array or single flat type name
+ * @param {number} filters.minPrice
+ * @param {number} filters.maxPrice
+ * @param {number} filters.minFloorArea
+ * @param {number} filters.maxFloorArea
+ * @param {number} filters.minRemainingLease
+ * @param {string} filters.sortBy
+ * @param {string} filters.sortOrder
+ * @param {number} filters.limit
+ * @param {number} filters.page
+ * @returns {Promise} Object with properties array
  */
-export const searchProperties = async (filters = {}) => {
+export const searchProperties = async (filters = {}, fetchAll = false) => {
   const params = new URLSearchParams();
-  
-  if (filters.towns && filters.towns.length > 0) {
-    params.append('towns', filters.towns.join(','));
-  }
-  if (filters.flatTypes && filters.flatTypes.length > 0) {
-    params.append('flatTypes', filters.flatTypes.join(','));
-  }
+
+  const towns = Array.isArray(filters.towns)
+    ? filters.towns
+    : filters.towns
+    ? [filters.towns]
+    : [];
+  if (towns.length > 0) params.append('towns', towns.join(','));
+
+  const flatTypes = Array.isArray(filters.flatTypes)
+    ? filters.flatTypes
+    : filters.flatTypes
+    ? [filters.flatTypes]
+    : [];
+  if (flatTypes.length > 0) params.append('flatTypes', flatTypes.join(','));
+
   if (filters.minPrice) params.append('minPrice', filters.minPrice);
   if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
   if (filters.minFloorArea) params.append('minFloorArea', filters.minFloorArea);
@@ -159,12 +167,21 @@ export const searchProperties = async (filters = {}) => {
   if (filters.minRemainingLease) params.append('minRemainingLease', filters.minRemainingLease);
   if (filters.sortBy) params.append('sortBy', filters.sortBy);
   if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-  if (filters.limit) params.append('limit', filters.limit);
-  if (filters.page) params.append('page', filters.page);
-  
+
+  if (!fetchAll) {
+    if (filters.limit) params.append('limit', filters.limit);
+    if (filters.page) params.append('page', filters.page);
+  } else {
+    // Some backends support a very large limit, e.g., 100000 to fetch everything
+    params.append('limit', 100000);
+    params.append('page', 1);
+  }
+
   const response = await api.get(`/properties/search?${params.toString()}`);
   return response.data;
 };
+
+
 
 /**
  * Get property by transaction ID

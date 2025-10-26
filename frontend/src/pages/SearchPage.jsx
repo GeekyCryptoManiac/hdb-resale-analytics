@@ -1,51 +1,51 @@
 // src/pages/SearchPage.jsx
-import React from 'react';
-import { Container, Card, Row, Col, Alert } from 'react-bootstrap';
-import PropertyCard from '../components/PropertyCard';
+import React, { useEffect, useState } from "react";
+import { Container, Card, Row, Col, Form, Button, Alert, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { getTowns, getFlatTypes } from "../services/api";
 
 function SearchPage() {
-  // Sample properties for testing PropertyCard component
-  const sampleProperties = [
-    {
-      transaction_id: 1,
-      block_number: '123',
-      street_name: 'Bedok North Street 1',
-      town_name: 'BEDOK',
-      flat_type_name: '4 ROOM',
-      floor_area_sqm: 95,
-      storey_range: '10 TO 12',
-      price: 445000,
-      price_per_sqm: 4684.21,
-      month: '2024-08'
-    },
-    {
-      transaction_id: 2,
-      block_number: '456',
-      street_name: 'Tampines Avenue 5',
-      town_name: 'TAMPINES',
-      flat_type_name: '5 ROOM',
-      floor_area_sqm: 110,
-      storey_range: '07 TO 09',
-      price: 520000,
-      price_per_sqm: 4727.27,
-      month: '2024-07'
-    },
-    {
-      transaction_id: 3,
-      block_number: '789',
-      street_name: 'Punggol Drive',
-      town_name: 'PUNGGOL',
-      flat_type_name: '3 ROOM',
-      floor_area_sqm: 68,
-      storey_range: '04 TO 06',
-      price: 350000,
-      price_per_sqm: 5147.06,
-      month: '2024-09'
-    }
-  ];
+  const [towns, setTowns] = useState([]);
+  const [flatTypes, setFlatTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    town: "",
+    flatType: "",
+    minPrice: "",
+    maxPrice: "",
+    minFloorArea: "",
+    maxFloorArea: "",
+    minRemainingLease: "",
+    sortBy: "",
+    sortOrder: ""
+  });
 
-  const handleComparisonToggle = (transactionId, isCurrentlyInComparison) => {
-    console.log('Comparison toggled:', transactionId, isCurrentlyInComparison);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [townList, flatTypeList] = await Promise.all([getTowns(), getFlatTypes()]);
+        setTowns(townList.data);
+        setFlatTypes(flatTypeList.data);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate("/results", { state: { filters } });
   };
 
   return (
@@ -53,31 +53,154 @@ function SearchPage() {
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>
-            <h2>Search HDB Properties</h2>
+            <h2>Search Your HDB Apartment</h2>
           </Card.Title>
-          <Alert variant="info">
-            <strong>Person C will build the search form here.</strong>
-            <br />
-            Below are sample PropertyCard components for testing.
-          </Alert>
+
+          {loading ? (
+            <Spinner animation="border" />
+          ) : (
+            <Form onSubmit={handleSearch}>
+              <Row className="mb-3">
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Town</Form.Label>
+                    <Form.Select
+                      name="town"
+                      value={filters.town}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Town</option>
+                      {Array.isArray(towns) &&
+                        towns.map((t) => (
+                          <option key={t.id} value={t.town_name}>
+                            {t.town_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label>Flat Type</Form.Label>
+                    <Form.Select
+                      name="flatType"
+                      value={filters.flatType}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Flat Type</option>
+                      {Array.isArray(flatTypes) &&
+                        flatTypes.map((f) => (
+                          <option key={f.flat_type_id} value={f.flat_type_name}>
+                            {f.flat_type_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={2}>
+                  <Form.Group>
+                    <Form.Label>Min Price</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="minPrice"
+                      value={filters.minPrice}
+                      onChange={handleChange}
+                      placeholder="e.g. 300000"
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={2}>
+                  <Form.Group>
+                    <Form.Label>Max Price</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="maxPrice"
+                      value={filters.maxPrice}
+                      onChange={handleChange}
+                      placeholder="e.g. 800000"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col md={2}>
+                  <Form.Group>
+                    <Form.Label>Min Floor Area (sqm)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="minFloorArea"
+                      value={filters.minFloorArea}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={2}>
+                  <Form.Group>
+                    <Form.Label>Max Floor Area (sqm)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="maxFloorArea"
+                      value={filters.maxFloorArea}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={2}>
+                  <Form.Group>
+                    <Form.Label>Min Remaining Lease (years)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="minRemainingLease"
+                      value={filters.minRemainingLease}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label>Sort By</Form.Label>
+                    <Form.Select name="sortBy" value={filters.sortBy} onChange={handleChange}>
+                      <option value="">Default</option>
+                      <option value="price">Price</option>
+                      <option value="floor_area_sqm">Floor Area</option>
+                      <option value="price_per_sqm">Price per sqm</option>
+                      <option value="month">Transaction Month</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label>Sort Order</Form.Label>
+                    <Form.Select
+                      name="sortOrder"
+                      value={filters.sortOrder}
+                      onChange={handleChange}
+                    >
+                      <option value="">Default</option>
+                      <option value="ASC">Ascending</option>
+                      <option value="DESC">Descending</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Button variant="primary" type="submit">
+                Search
+              </Button>
+            </Form>
+          )}
         </Card.Body>
       </Card>
 
-      {/* Sample PropertyCards for Demo */}
-      <h4 className="mb-3">Sample Property Cards (For Testing):</h4>
-      
-      <Row>
-        <Col md={12}>
-          {sampleProperties.map(property => (
-            <PropertyCard
-              key={property.transaction_id}
-              property={property}
-              showComparisonButton={true}
-              onComparisonToggle={handleComparisonToggle}
-            />
-          ))}
-        </Col>
-      </Row>
+      <Alert variant="info">Use the form above to filter properties and view results.</Alert>
     </Container>
   );
 }
