@@ -15,9 +15,18 @@ function ComparisonPage() {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-          setComparisons(data);
+
+          // Always expect an array
+          if (Array.isArray(data)) {
+            setComparisons(data);
+          } else if (Array.isArray(data.comparisons)) {
+            setComparisons(data.comparisons);
+          } else {
+            setComparisons([]);
+          }
         } catch (err) {
           console.error("Error fetching comparisons:", err);
+          setComparisons([]);
         }
       };
 
@@ -33,7 +42,7 @@ function ComparisonPage() {
       });
 
       if (res.ok) {
-        setComparisons(comparisons.filter((c) => c._id !== id));
+        setComparisons((prev) => prev.filter((c) => c._id !== id));
       } else {
         console.error("Failed to remove comparison");
       }

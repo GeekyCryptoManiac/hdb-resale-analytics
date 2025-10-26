@@ -1,40 +1,38 @@
-// src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(sessionStorage.getItem("token")); // 👈 sessionStorage
 
   useEffect(() => {
     if (token) {
-      setUser(JSON.parse(localStorage.getItem("user")));
+      setUser(JSON.parse(sessionStorage.getItem("user"))); // 👈 sessionStorage
     }
   }, [token]);
 
   // Login with email + password
   const login = async (email, password) => {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    throw new Error(data.error || "Login failed");
-  }
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
 
-  setToken(data.token);
-  setUser(data.user);
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("user", JSON.stringify(data.user));
-};
+    setToken(data.token);
+    setUser(data.user);
+    sessionStorage.setItem("token", data.token);           // 👈 sessionStorage
+    sessionStorage.setItem("user", JSON.stringify(data.user)); // 👈 sessionStorage
+  };
 
-
-  // Register new user (auto-login)
+  // Register new user
   const register = async (email, name, password) => {
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -46,25 +44,15 @@ export function AuthProvider({ children }) {
       throw new Error("Registration failed");
     }
 
-    const data = await res.json();
-
-    // if backend also returns token + user, store them
-    if (data.token && data.user) {
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-    }
-
-    return data;
+    return await res.json();
   };
 
   // Logout clears everything
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token"); // 👈 sessionStorage
+    sessionStorage.removeItem("user");  // 👈 sessionStorage
   };
 
   return (

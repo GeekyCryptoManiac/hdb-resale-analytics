@@ -22,10 +22,9 @@ function UserDetailsPage() {
     <Container className="mt-5">
       <Card className="mx-auto" style={{ maxWidth: "500px" }}>
         <Card.Body>
-          <Card.Title>User Details</Card.Title>
+          <Card.Title>Profile Details</Card.Title>
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Email:</strong> {user.email}</p>
-          {user.id && <p><strong>User ID:</strong> {user.id}</p>}
         </Card.Body>
       </Card>
     </Container>
