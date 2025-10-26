@@ -128,7 +128,7 @@ export const getFlatTypeById = async (flatTypeId) => {
 // ============================================
 
 /**
- * Search properties with filters
+ * Search properties with filters test
  * @param {Object} filters - Search filters
  * @param {Array|string} filters.towns - Array or single town name
  * @param {Array|string} filters.flatTypes - Array or single flat type name
