@@ -5,13 +5,15 @@ import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstr
 import { useUser } from '../context/UserContext';
 
 function Navbar() {
-  const { user, logout } = useUser();
+  const { user, logout, comparisonProperties } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const comparisonCount = comparisonProperties?.length || 0;
 
   return (
     <BootstrapNavbar bg="primary" variant="dark" expand="lg" className="mb-4">
@@ -32,7 +34,7 @@ function Navbar() {
             {user ? (
               <>
                 <Nav.Link as={Link} to="/comparison">
-                  My Comparisons ({user.comparisonList?.length || 0})
+                  My Comparisons {comparisonCount > 0 && `(${comparisonCount})`}
                 </Nav.Link>
                 <BootstrapNavbar.Text className="me-3">
                   Welcome, {user.name}

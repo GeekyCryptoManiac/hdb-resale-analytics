@@ -3,17 +3,23 @@ import React, { useState } from 'react';
 import { Button, Spinner, Toast } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { addToComparison, removeFromComparison } from '../services/userService';
 
 function ComparisonButton({ 
   transactionId, 
+  propertyData, // Add this prop to receive full property data
   variant = 'outline-primary',
   size = 'sm',
   className = '',
   onSuccess,
   onError 
 }) {
-  const { user, updateUser } = useUser();
+  const { 
+    user, 
+    updateUser, 
+    comparisonProperties,
+    addToComparisonProperties, 
+    removeFromComparisonProperties 
+  } = useUser();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -21,7 +27,7 @@ function ComparisonButton({
   const [toastVariant, setToastVariant] = useState('success');
 
   // Check if property is in comparison list
-  const isInComparison = user?.comparisonList?.includes(transactionId);
+  const isInComparison = comparisonProperties?.some(prop => prop.transactionId === transactionId);
 
   // Maximum comparison limit
   const MAX_COMPARISON = 3;
@@ -34,6 +40,11 @@ function ComparisonButton({
   };
 
   const handleClick = async () => {
+    // If user data is still loading, wait
+    if (user === undefined) {
+      return;
+    }
+    
     // Check if user is logged in
     if (!user) {
       navigate('/login');
@@ -44,12 +55,8 @@ function ComparisonButton({
 
     try {
       if (isInComparison) {
-        // Remove from comparison
-        const response = await removeFromComparison(user._id || user.userId, transactionId);
-        
-        // Update user context
-        const updatedComparisonList = user.comparisonList.filter(id => id !== transactionId);
-        updateUser({ comparisonList: updatedComparisonList });
+        // Remove from comparison using context function
+        removeFromComparisonProperties(transactionId);
         
         showNotification('Removed from comparison list', 'info');
         
@@ -58,18 +65,19 @@ function ComparisonButton({
         }
       } else {
         // Check limit before adding
-        if (user.comparisonList && user.comparisonList.length >= MAX_COMPARISON) {
+        if (comparisonProperties && comparisonProperties.length >= MAX_COMPARISON) {
           showNotification(`Maximum ${MAX_COMPARISON} properties allowed. Remove one first.`, 'warning');
           setLoading(false);
           return;
         }
 
-        // Add to comparison
-        const response = await addToComparison(user._id || user.userId, transactionId);
-        
-        // Update user context
-        const updatedComparisonList = [...(user.comparisonList || []), transactionId];
-        updateUser({ comparisonList: updatedComparisonList });
+        // Add to comparison using context function
+        if (propertyData) {
+          addToComparisonProperties({
+            ...propertyData,
+            transactionId: transactionId // Ensure transactionId is set
+          });
+        }
         
         showNotification('Added to comparison list!', 'success');
         
@@ -112,7 +120,7 @@ function ComparisonButton({
           </>
         ) : (
           <>
-            {isInComparison ? '✓ In Comparison' : '+ Add to Compare'}
+            {isInComparison ? '✓ In comparison list' : '+ Add to Compare'}
           </>
         )}
       </Button>
@@ -129,7 +137,7 @@ function ComparisonButton({
         <Toast 
           show={showToast} 
           onClose={() => setShowToast(false)}
-          bg={toastVariant}
+          bg={toastVariant.toLowerCase()}
           delay={3000}
           autohide
         >

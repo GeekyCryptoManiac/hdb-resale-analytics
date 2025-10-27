@@ -3,28 +3,55 @@ import React from 'react';
 import { Card, Button, Badge, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import ComparisonButton from './ComparisonButton'; // Import the ComparisonButton
 
 function PropertyCard({ property, showComparisonButton = true, onComparisonToggle }) {
   const navigate = useNavigate();
   const { user } = useUser();
 
-  // Check if property is in comparison list
-  const isInComparison = user?.comparisonList?.includes(property.transaction_id);
+  // Transform API data to match your application's expected format
+  const transformedProperty = {
+    // Map transaction_id to transactionId
+    transactionId: property.transaction_id,
+    
+    // Create a proper name from address components
+    name: `${property.block_number} ${property.street_name}, ${property.town_name}`,
+    
+    // Direct mappings
+    price: property.price,
+    size: property.floor_area_sqm,
+    area: property.floor_area_sqm,
+    
+    // Map storey_range to floor
+    floor: property.storey_range,
+    floorNumber: property.storey_range,
+    
+    // Map flat_type_name to propertyType
+    propertyType: property.flat_type_name,
+    type: property.flat_type_name,
+    
+    // Location information
+    location: `${property.town_name}, ${property.street_name}`,
+    
+    // Additional fields that might be useful
+    blockNumber: property.block_number,
+    streetName: property.street_name,
+    townName: property.town_name,
+    pricePerSqm: property.price_per_sqm,
+    month: property.month,
+    
+    // You can add transactionType if needed
+    transactionType: 'sale' // Assuming all are for sale
+  };
 
   const handleViewDetails = () => {
     navigate(`/property/${property.transaction_id}`);
   };
 
-  const handleComparisonClick = () => {
-    if (!user) {
-      // Redirect to login if not authenticated
-      navigate('/login');
-      return;
-    }
-    
-    // Call parent's callback function
+  const handleComparisonSuccess = (result) => {
+    // Call parent's callback function if provided
     if (onComparisonToggle) {
-      onComparisonToggle(property.transaction_id, isInComparison);
+      onComparisonToggle(property.transaction_id, result.action === 'add');
     }
   };
 
@@ -60,16 +87,19 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
               </strong>
             </Card.Title>
 
-            {/* Property Details */}
+            {/* Town and Property Details */}
             <Card.Text className="mb-2">
+              <Badge bg="secondary" className="me-2">
+                {property.town_name}
+              </Badge>
               <Badge bg="primary" className="me-2">
                 {property.flat_type_name}
               </Badge>
-              <Badge bg="secondary" className="me-2">
+              <Badge bg="info" className="me-2">
                 {property.floor_area_sqm} sqm
               </Badge>
               {property.storey_range && (
-                <Badge bg="info" className="me-2">
+                <Badge bg="warning" className="me-2">
                   Floor {property.storey_range}
                 </Badge>
               )}
@@ -103,14 +133,14 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
             </Button>
 
             {showComparisonButton && (
-              <Button
-                variant={isInComparison ? 'success' : 'outline-primary'}
+              <ComparisonButton
+                transactionId={property.transaction_id}
+                propertyData={transformedProperty} // Pass the transformed data
+                onSuccess={handleComparisonSuccess}
+                variant="outline-primary"
                 size="sm"
-                onClick={handleComparisonClick}
                 className="w-100"
-              >
-                {isInComparison ? '✓ In Comparison' : '+ Add to Compare'}
-              </Button>
+              />
             )}
           </Col>
         </Row>
