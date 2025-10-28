@@ -9,7 +9,7 @@ function SearchPage() {
   const [flatTypes, setFlatTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    town: "",
+    towns: [], // Changed to array for multiple selection
     flatType: "",
     minPrice: "",
     maxPrice: "",
@@ -43,6 +43,17 @@ function SearchPage() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleTownCheckbox = (townName) => {
+    setFilters((prev) => {
+      const isSelected = prev.towns.includes(townName);
+      if (isSelected) {
+        return { ...prev, towns: prev.towns.filter(t => t !== townName) };
+      } else {
+        return { ...prev, towns: [...prev.towns, townName] };
+      }
+    });
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     navigate("/results", { state: { filters } });
@@ -53,7 +64,7 @@ function SearchPage() {
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>
-            <h2>Search Your HDB Apartment</h2>
+            <h2>Enter HDB Apartment Details</h2>
           </Card.Title>
 
           {loading ? (
@@ -61,25 +72,32 @@ function SearchPage() {
           ) : (
             <Form onSubmit={handleSearch}>
               <Row className="mb-3">
-                <Col md={4}>
+                <Col md={12}>
                   <Form.Group>
-                    <Form.Label>Town</Form.Label>
-                    <Form.Select
-                      name="town"
-                      value={filters.town}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select Town</option>
+                    <Form.Label>Towns (Select one or more)</Form.Label>
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px', padding: '10px' }}>
                       {Array.isArray(towns) &&
                         towns.map((t) => (
-                          <option key={t.id} value={t.town_name}>
-                            {t.town_name}
-                          </option>
+                          <Form.Check
+                            key={t.id}
+                            type="checkbox"
+                            id={`town-${t.id}`}
+                            label={t.town_name}
+                            checked={filters.towns.includes(t.town_name)}
+                            onChange={() => handleTownCheckbox(t.town_name)}
+                          />
                         ))}
-                    </Form.Select>
+                    </div>
+                    {filters.towns.length > 0 && (
+                      <Form.Text className="text-muted">
+                        Selected: {filters.towns.join(', ')}
+                      </Form.Text>
+                    )}
                   </Form.Group>
                 </Col>
+              </Row>
 
+              <Row className="mb-3">
                 <Col md={4}>
                   <Form.Group>
                     <Form.Label>Flat Type</Form.Label>
@@ -99,7 +117,7 @@ function SearchPage() {
                   </Form.Group>
                 </Col>
 
-                <Col md={2}>
+                <Col md={4}>
                   <Form.Group>
                     <Form.Label>Min Price</Form.Label>
                     <Form.Control
@@ -112,7 +130,7 @@ function SearchPage() {
                   </Form.Group>
                 </Col>
 
-                <Col md={2}>
+                <Col md={4}>
                   <Form.Group>
                     <Form.Label>Max Price</Form.Label>
                     <Form.Control
@@ -127,7 +145,7 @@ function SearchPage() {
               </Row>
 
               <Row className="mb-3">
-                <Col md={2}>
+                <Col md={3}>
                   <Form.Group>
                     <Form.Label>Min Floor Area (sqm)</Form.Label>
                     <Form.Control
@@ -139,7 +157,7 @@ function SearchPage() {
                   </Form.Group>
                 </Col>
 
-                <Col md={2}>
+                <Col md={3}>
                   <Form.Group>
                     <Form.Label>Max Floor Area (sqm)</Form.Label>
                     <Form.Control
@@ -163,7 +181,7 @@ function SearchPage() {
                   </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={2}>
                   <Form.Group>
                     <Form.Label>Sort By</Form.Label>
                     <Form.Select name="sortBy" value={filters.sortBy} onChange={handleChange}>
@@ -176,7 +194,7 @@ function SearchPage() {
                   </Form.Group>
                 </Col>
 
-                <Col md={3}>
+                <Col md={2}>
                   <Form.Group>
                     <Form.Label>Sort Order</Form.Label>
                     <Form.Select
@@ -199,8 +217,6 @@ function SearchPage() {
           )}
         </Card.Body>
       </Card>
-
-      <Alert variant="info">Use the form above to filter properties and view results.</Alert>
     </Container>
   );
 }
