@@ -1,13 +1,14 @@
 // src/components/PropertyCard.jsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { Card, Button, Badge, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
+import { AuthContext } from '../context/AuthContext';
 
 function PropertyCard({ property, showComparisonButton = true, onComparisonToggle }) {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useContext(AuthContext);
 
+  // Check if property is in comparison list (safe default)
   const isInComparison = user?.comparisonList?.includes(property.transaction_id);
 
   const handleViewDetails = () => navigate(`/property/${property.transaction_id}`);
@@ -17,7 +18,11 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
       navigate('/login');
       return;
     }
-    if (onComparisonToggle) onComparisonToggle(property.transaction_id, isInComparison);
+
+    // Call parent's callback function
+    if (onComparisonToggle) {
+      onComparisonToggle(property.transaction_id, isInComparison);
+    }
   };
 
   const formatPrice = (price) => new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(price);
@@ -46,7 +51,15 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
           </Col>
 
           <Col md={4} className="d-flex flex-column justify-content-center align-items-end">
-            <Button variant="primary" size="sm" onClick={handleViewDetails} className="mb-2 w-100">View Details</Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleViewDetails}
+              className="mb-2 w-100"
+            >
+              View Details
+            </Button>
+
             {showComparisonButton && (
               <Button
                 variant={isInComparison ? 'success' : 'outline-primary'}

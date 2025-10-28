@@ -1,16 +1,16 @@
 // src/components/Navbar.jsx
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Navbar as BootstrapNavbar, Nav, Container, Button } from 'react-bootstrap';
-import { useUser } from '../context/UserContext';
+import React, { useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Navbar as BootstrapNavbar, Nav, Container, Button } from "react-bootstrap";
+import { AuthContext } from "../context/AuthContext";
 
 function Navbar() {
-  const { user, logout } = useUser();
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -19,20 +19,23 @@ function Navbar() {
         <BootstrapNavbar.Brand as={Link} to="/search">
           🏠 HDB Analytics
         </BootstrapNavbar.Brand>
-        
+
         <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
-        
+
         <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/search">Search</Nav.Link>
             <Nav.Link as={Link} to="/analytics">Analytics</Nav.Link>
           </Nav>
-          
+
           <Nav className="ms-auto">
             {user ? (
               <>
                 <Nav.Link as={Link} to="/comparison">
-                  My Comparisons ({user.comparisonList?.length || 0})
+                  My Comparisons
+                </Nav.Link>
+                <Nav.Link as={Link} to="/me">
+                  My Profile
                 </Nav.Link>
                 <BootstrapNavbar.Text className="me-3">
                   Welcome, {user.name}
@@ -42,7 +45,10 @@ function Navbar() {
                 </Button>
               </>
             ) : (
-              <Nav.Link as={Link} to="/login">Login</Nav.Link>
+              <>
+                <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                <Nav.Link as={Link} to="/register">Register</Nav.Link>
+              </>
             )}
           </Nav>
         </BootstrapNavbar.Collapse>
