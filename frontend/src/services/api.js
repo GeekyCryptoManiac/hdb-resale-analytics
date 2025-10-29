@@ -128,31 +128,20 @@ export const getFlatTypeById = async (flatTypeId) => {
 // ============================================
 
 /**
- * Search properties with filters test
+ * Search properties with filters
  * @param {Object} filters - Search filters
- * @param {Array|string} filters.towns - Array or single town name
- * @param {Array|string} filters.flatTypes - Array or single flat type name
- * @param {number} filters.minPrice
- * @param {number} filters.maxPrice
- * @param {number} filters.minFloorArea
- * @param {number} filters.maxFloorArea
- * @param {number} filters.minRemainingLease
- * @param {string} filters.sortBy
- * @param {string} filters.sortOrder
- * @param {number} filters.limit
- * @param {number} filters.page
- * @returns {Promise} Object with properties array
+ * @param {Array} filters.towns - Array of town names
+ * @param {Array} filters.flatTypes - Array of flat type names
+ * @param {boolean} fetchAll - If true, fetches all results
  */
 export const searchProperties = async (filters = {}, fetchAll = false) => {
   const params = new URLSearchParams();
 
-  const towns = Array.isArray(filters.towns)
-    ? filters.towns
-    : filters.towns
-    ? [filters.towns]
-    : [];
+  // Handle towns array
+  const towns = Array.isArray(filters.towns) ? filters.towns : [];
   if (towns.length > 0) params.append('towns', towns.join(','));
 
+  // Handle flat types array
   const flatTypes = Array.isArray(filters.flatTypes)
     ? filters.flatTypes
     : filters.flatTypes
@@ -172,7 +161,6 @@ export const searchProperties = async (filters = {}, fetchAll = false) => {
     if (filters.limit) params.append('limit', filters.limit);
     if (filters.page) params.append('page', filters.page);
   } else {
-    // Some backends support a very large limit, e.g., 100000 to fetch everything
     params.append('limit', 100000);
     params.append('page', 1);
   }
