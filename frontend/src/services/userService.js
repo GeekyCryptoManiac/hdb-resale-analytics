@@ -56,13 +56,14 @@ export const getComparisonList = async (userId) => {
 
 /**
  * Add property to comparison list
+ * FIXED: Now accepts full property object
  * @param {string} userId - User ID
- * @param {number} transactionId - Transaction ID to add
+ * @param {Object} property - Full property object to add
  * @returns {Promise} Updated user object
  */
-export const addToComparison = async (userId, transactionId) => {
+export const addToComparison = async (userId, property) => {
   const response = await userApi.post(`/users/${userId}/comparison`, {
-    transactionId
+    property: property  // Send the full property object
   });
   return response.data;
 };

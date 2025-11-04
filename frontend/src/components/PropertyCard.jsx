@@ -2,30 +2,18 @@
 import React, { useContext } from 'react';
 import { Card, Button, Badge, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import ComparisonButton from './ComparisonButton';
 
-function PropertyCard({ property, showComparisonButton = true, onComparisonToggle }) {
+function PropertyCard({ property, showComparisonButton = true }) {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-
-  // Check if property is in comparison list (safe default)
-  const isInComparison = user?.comparisonList?.includes(property.transaction_id);
 
   const handleViewDetails = () => navigate(`/property/${property.transaction_id}`);
 
-  const handleComparisonClick = () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    // Call parent's callback function
-    if (onComparisonToggle) {
-      onComparisonToggle(property.transaction_id, isInComparison);
-    }
-  };
-
-  const formatPrice = (price) => new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(price);
+  const formatPrice = (price) => new Intl.NumberFormat('en-SG', { 
+    style: 'currency', 
+    currency: 'SGD', 
+    maximumFractionDigits: 0 
+  }).format(price);
 
   return (
     <Card className="mb-3 property-card">
@@ -47,7 +35,10 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
               <span className="text-muted ms-2">({formatPrice(property.price_per_sqm)}/sqm)</span>
             </Card.Text>
 
-            <Card.Text className="text-muted small mb-0">Transaction: {property.month}</Card.Text>
+            <Card.Text className="text-muted small mb-0">
+              Transaction: {property.month}
+              {property.town && <span className="ms-2">Town: {property.town}</span>}
+            </Card.Text>
           </Col>
 
           <Col md={4} className="d-flex flex-column justify-content-center align-items-end">
@@ -61,14 +52,10 @@ function PropertyCard({ property, showComparisonButton = true, onComparisonToggl
             </Button>
 
             {showComparisonButton && (
-              <Button
-                variant={isInComparison ? 'success' : 'outline-primary'}
-                size="sm"
-                onClick={handleComparisonClick}
+              <ComparisonButton 
+                property={property}
                 className="w-100"
-              >
-                {isInComparison ? '✓ In Comparison' : '+ Add to Compare'}
-              </Button>
+              />
             )}
           </Col>
         </Row>

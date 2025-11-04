@@ -1,19 +1,19 @@
 // src/components/ComparisonButton.jsx
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Button, Spinner, Toast } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
+import { AuthContext } from '../context/AuthContext';
 import { addToComparison, removeFromComparison } from '../services/userService';
 
 function ComparisonButton({ 
-  transactionId, 
+  property,
   variant = 'outline-primary',
   size = 'sm',
   className = '',
   onSuccess,
   onError 
 }) {
-  const { user, updateUser } = useUser();
+  const { user, updateComparisonList } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -21,7 +21,9 @@ function ComparisonButton({
   const [toastVariant, setToastVariant] = useState('success');
 
   // Check if property is in comparison list
-  const isInComparison = user?.comparisonList?.includes(transactionId);
+  const isInComparison = user?.comparisonList?.some(
+    item => item.transaction_id === property.transaction_id
+  );
 
   // Maximum comparison limit
   const MAX_COMPARISON = 3;
@@ -33,61 +35,89 @@ function ComparisonButton({
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleClick = async () => {
-    // Check if user is logged in
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      if (isInComparison) {
-        // Remove from comparison
-        const response = await removeFromComparison(user._id || user.userId, transactionId);
-        
-        // Update user context
-        const updatedComparisonList = user.comparisonList.filter(id => id !== transactionId);
-        updateUser({ comparisonList: updatedComparisonList });
-        
-        showNotification('Removed from comparison list', 'info');
-        
-        if (onSuccess) {
-          onSuccess({ action: 'remove', transactionId });
-        }
-      } else {
-        // Check limit before adding
-        if (user.comparisonList && user.comparisonList.length >= MAX_COMPARISON) {
-          showNotification(`Maximum ${MAX_COMPARISON} properties allowed. Remove one first.`, 'warning');
-          setLoading(false);
-          return;
-        }
-
-        // Add to comparison
-        const response = await addToComparison(user._id || user.userId, transactionId);
-        
-        // Update user context
-        const updatedComparisonList = [...(user.comparisonList || []), transactionId];
-        updateUser({ comparisonList: updatedComparisonList });
-        
-        showNotification('Added to comparison list!', 'success');
-        
-        if (onSuccess) {
-          onSuccess({ action: 'add', transactionId });
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling comparison:', error);
-      showNotification('Failed to update comparison list', 'danger');
-      
-      if (onError) {
-        onError(error);
-      }
-    } finally {
-      setLoading(false);
-    }
+  // Get user ID with multiple fallbacks
+  const getUserId = () => {
+    const userId = user?._id || user?.id || user?.userId;
+    console.log('🔍 Getting user ID:', { 
+      _id: user?._id, 
+      id: user?.id, 
+      userId: user?.userId,
+      selected: userId 
+    });
+    return userId;
   };
+
+  const handleClick = async () => {
+  // Check if user is logged in
+  if (!user) {
+    console.log('⚠️ No user found, redirecting to login');
+    navigate('/login');
+    return;
+  }
+
+  const userId = getUserId();
+  
+  if (!userId) {
+    console.error('❌ User ID is undefined!', user);
+    showNotification('Error: User ID not found. Please log in again.', 'danger');
+    navigate('/login');
+    return;
+  }
+
+  console.log('👤 Using user ID:', userId);
+  console.log('🏠 Property transaction_id:', property.transaction_id, 'Type:', typeof property.transaction_id);
+  setLoading(true);
+
+  try {
+    if (isInComparison) {
+      // Remove from comparison
+      console.log('➖ Removing from comparison:', property.transaction_id);
+      await removeFromComparison(userId, property.transaction_id.toString()); // Ensure string for URL param
+      
+      // Update user context
+      const updatedComparisonList = user.comparisonList.filter(
+        item => item.transaction_id !== property.transaction_id
+      );
+      updateComparisonList(updatedComparisonList);
+      
+      showNotification('Removed from comparison list', 'info');
+      
+      if (onSuccess) {
+        onSuccess({ action: 'remove', property });
+      }
+    } else {
+      // Check limit before adding
+      if (user.comparisonList && user.comparisonList.length >= MAX_COMPARISON) {
+        showNotification(`Maximum ${MAX_COMPARISON} properties allowed. Remove one first.`, 'warning');
+        setLoading(false);
+        return;
+      }
+
+      // Add to comparison - pass the full property object
+      console.log('➕ Adding to comparison:', property.transaction_id);
+      await addToComparison(userId, property);
+      
+      // Update user context - store full property data for comparison
+      const updatedComparisonList = [...(user.comparisonList || []), property];
+      updateComparisonList(updatedComparisonList);
+      
+      showNotification('Added to comparison list!', 'success');
+      
+      if (onSuccess) {
+        onSuccess({ action: 'add', property });
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error toggling comparison:', error);
+    showNotification(error.message || 'Failed to update comparison list', 'danger');
+    
+    if (onError) {
+      onError(error);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
@@ -112,7 +142,7 @@ function ComparisonButton({
           </>
         ) : (
           <>
-            {isInComparison ? '✓ In Comparison' : '+ Add to Compare'}
+            {isInComparison ? '✓ In Comparison' : '+ Compare'}
           </>
         )}
       </Button>
