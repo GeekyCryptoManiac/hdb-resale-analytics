@@ -18,4 +18,7 @@ router.get('/flat-type-comparison', analyticsController.getFlatTypeComparison);
 // GET /api/analytics/price-distribution - Get price distribution
 router.get('/price-distribution', analyticsController.getPriceDistribution);
 
+// GET /api/analytics/get-price-avg - Get price avg
+router.get('/get-price-avg', analyticsController.getPriceAvg);
+
 module.exports = router;
