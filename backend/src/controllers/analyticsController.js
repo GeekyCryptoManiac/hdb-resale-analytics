@@ -167,12 +167,13 @@ async function getPriceDistribution(req, res, next) {
         const bucketSize = req.query.bucketSize ? parseInt(req.query.bucketSize) : 50000;
         
         const [distribution] = await pool.query(`
-            SELECT 
-                FLOOR(price / ?) * ? AS price_bucket,
-                COUNT(*) AS count
-            FROM Transaction
-            GROUP BY price_bucket
-            ORDER BY price_bucket ASC
+        SELECT 
+            FLOOR(price / ?) * ? AS price_bucket,
+            COUNT(*) AS count
+        FROM Transaction
+        WHERE price BETWEEN 100000 AND 1250000  -- ✅ remove outliers
+        GROUP BY price_bucket
+        ORDER BY price_bucket ASC;
         `, [bucketSize, bucketSize]);
         
         res.json({
@@ -186,10 +187,40 @@ async function getPriceDistribution(req, res, next) {
     }
 }
 
+/**
+ * Get Avg Price of town each year
+ * GET /api/analytics/get-price-avg
+ */
+async function getPriceAvg(req, res, next) {
+    try {
+        const [comparison] = await pool.query(`
+            SELECT 
+                LEFT(t.month, 4) AS year,
+                town.town_name,
+                ROUND(AVG(t.price), 2) AS avg_price
+            FROM Transaction t
+            JOIN Block b ON t.block_id = b.block_id
+            JOIN Town town ON b.town_id = town.town_id
+            WHERE LEFT(t.month, 4) BETWEEN '2020' AND '2025'
+            GROUP BY year, town.town_name
+            ORDER BY year ASC, avg_price DESC;
+        `);
+        
+        res.json({
+            success: true,
+            count: comparison.length,
+            data: comparison
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getOverallStatistics,
     getPriceTrends,
     getTownComparison,
     getFlatTypeComparison,
-    getPriceDistribution
+    getPriceDistribution,
+    getPriceAvg
 };
