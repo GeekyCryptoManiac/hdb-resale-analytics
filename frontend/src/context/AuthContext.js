@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
     console.log('✅ Login successful, user data:', data.user);
     console.log('📋 User ID from backend:', data.user.id, data.user._id);
     
-    // CRITICAL: Ensure we have the user ID
+    // Ensure we have the user ID
     const userId = data.user._id || data.user.id;
     
     if (!userId) {

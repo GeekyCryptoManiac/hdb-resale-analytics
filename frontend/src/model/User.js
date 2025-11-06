@@ -2,6 +2,21 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Define a proper schema for comparison items
+const comparisonItemSchema = new mongoose.Schema({
+  transaction_id: { type: Number, required: true },
+  block_number: String,
+  street_name: String,
+  flat_type_name: String,
+  floor_area_sqm: Number,
+  storey_range: String,
+  town_name: String,
+  town: String,
+  month: String,
+  price: Number,
+  price_per_sqm: Number
+}, { _id: false, strict: false }); // Allow additional fields but don't create _id
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,17 +37,22 @@ const userSchema = new mongoose.Schema({
   },
   // Store full property objects in comparison list
   comparisonList: {
-    type: [mongoose.Schema.Types.Mixed],  // Allow any object structure
-    default: []
+    type: [comparisonItemSchema],
+    default: [],
+    // Ensure it's always an array
+    validate: {
+      validator: function(v) {
+        return Array.isArray(v);
+      },
+      message: 'comparisonList must be an array'
+    }
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
 }, {
-  timestamps: true,
-  // This helps prevent issues with Mixed type validation
-  strict: false
+  timestamps: true
 });
 
 // Hash password before saving

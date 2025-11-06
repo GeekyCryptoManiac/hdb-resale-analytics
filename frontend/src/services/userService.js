@@ -56,7 +56,6 @@ export const getComparisonList = async (userId) => {
 
 /**
  * Add property to comparison list
- * FIXED: Now accepts full property object
  * @param {string} userId - User ID
  * @param {Object} property - Full property object to add
  * @returns {Promise} Updated user object

@@ -36,7 +36,7 @@ router.get('/:userId/comparison', async (req, res) => {
 
 /**
  * POST /api/users/:userId/comparison
- * Add property to comparison list - RELIABLE VERSION
+ * Add property to comparison list
  */
 router.post('/:userId/comparison', async (req, res) => {
   try {
@@ -44,6 +44,7 @@ router.post('/:userId/comparison', async (req, res) => {
     const { property } = req.body;
 
     console.log('📥 POST add to comparison for user:', userId);
+    console.log('📦 Property data received:', JSON.stringify(property, null, 2));
 
     // Validate property data
     if (!property) {
@@ -64,13 +65,12 @@ router.post('/:userId/comparison', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('📋 Current comparison list BEFORE:', user.comparisonList?.length || 0, 'items');
-
-    // Initialize comparisonList if it doesn't exist
+    // Initialize comparisonList if undefined
     if (!user.comparisonList) {
       user.comparisonList = [];
-      console.log('📝 Initialized empty comparison list');
     }
+
+    console.log('📋 Current comparison list BEFORE:', user.comparisonList.length, 'items');
 
     // Check if property already exists
     const alreadyExists = user.comparisonList.some(
@@ -90,25 +90,48 @@ router.post('/:userId/comparison', async (req, res) => {
       });
     }
 
-    // Add property to comparison list
-    user.comparisonList.push(property);
-    console.log('➕ Added property to list. New size:', user.comparisonList.length);
+    // Sanitize property data - keep only needed fields
+    const sanitizedProperty = {
+      transaction_id: Number(property.transaction_id),
+      block_number: property.block_number,
+      street_name: property.street_name,
+      flat_type_name: property.flat_type_name,
+      floor_area_sqm: Number(property.floor_area_sqm) || 0,
+      storey_range: property.storey_range,
+      town_name: property.town_name || property.town,
+      town: property.town || property.town_name,
+      month: property.month,
+      price: Number(property.price) || 0,
+      price_per_sqm: Number(property.price_per_sqm) || 0
+    };
 
-    // CRITICAL: Mark the field as modified and save
-    user.markModified('comparisonList');
-    
-    // Save with proper error handling
-    await user.save();
-    console.log('💾 User saved successfully');
+    console.log('✨ Sanitized property:', sanitizedProperty);
 
-    // Verify the save worked by refetching
-    const verifiedUser = await User.findById(userId);
-    console.log('🔍 Verification - comparison list size:', verifiedUser.comparisonList?.length || 0);
+    // Use $push operator for atomic update
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        $push: { 
+          comparisonList: sanitizedProperty 
+        } 
+      },
+      { 
+        new: true,
+        runValidators: true
+      }
+    );
+
+    console.log('💾 User updated with $push operator');
+    console.log('🔍 Verification - comparison list size:', updatedUser.comparisonList?.length || 0);
+
+    // Double-check with a fresh query
+    const verifiedUser = await User.findById(userId).select('comparisonList');
+    console.log('🔍 Fresh query verification:', verifiedUser.comparisonList?.length || 0);
 
     res.json({
       message: 'Property added to comparison',
-      comparisonList: user.comparisonList,
-      verifiedSize: verifiedUser.comparisonList?.length || 0
+      comparisonList: updatedUser.comparisonList || [],
+      count: updatedUser.comparisonList?.length || 0
     });
 
   } catch (error) {
@@ -123,66 +146,50 @@ router.post('/:userId/comparison', async (req, res) => {
 
 /**
  * DELETE /api/users/:userId/comparison/:transactionId
- * Remove property from comparison list - RELIABLE VERSION
+ * Remove property from comparison list
  */
 router.delete('/:userId/comparison/:transactionId', async (req, res) => {
   try {
     const { userId, transactionId } = req.params;
     console.log('📥 DELETE from comparison - User:', userId, 'Transaction:', transactionId);
+    console.log('🔍 Transaction ID type:', typeof transactionId);
 
-    const user = await User.findById(userId);
-    
-    if (!user) {
+    // Convert transactionId to number for comparison
+    const numericTransactionId = Number(transactionId);
+    console.log('🔢 Numeric transaction ID:', numericTransactionId);
+
+    // Use $pull operator for atomic removal
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        $pull: { 
+          comparisonList: { 
+            transaction_id: numericTransactionId 
+          } 
+        } 
+      },
+      { 
+        new: true,
+        runValidators: false
+      }
+    );
+
+    if (!updatedUser) {
       console.log('❌ User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log('📋 Current comparison list:', user.comparisonList?.length || 0, 'items');
+    console.log('💾 Property removed using $pull operator');
+    console.log('🔍 New comparison list size:', updatedUser.comparisonList?.length || 0);
 
-    if (!user.comparisonList || user.comparisonList.length === 0) {
-      console.log('⚠️ Comparison list is empty');
-      return res.status(404).json({ error: 'Comparison list is empty' });
-    }
-
-    // Log all items for debugging
-    console.log('🔍 All items in comparison list:');
-    user.comparisonList.forEach((item, index) => {
-      console.log(`  [${index}] transaction_id:`, item.transaction_id, 'type:', typeof item.transaction_id);
-    });
-
-    const initialLength = user.comparisonList.length;
-    
-    // Filter out the item to remove
-    user.comparisonList = user.comparisonList.filter(item => {
-      const keep = item.transaction_id != transactionId;
-      if (!keep) {
-        console.log('🗑️ Removing item with transaction_id:', item.transaction_id);
-      }
-      return keep;
-    });
-
-    const finalLength = user.comparisonList.length;
-    console.log(`🔄 List changed from ${initialLength} to ${finalLength} items`);
-
-    if (initialLength === finalLength) {
-      console.log('⚠️ Property not found in comparison list');
-      return res.status(404).json({ error: 'Property not found in comparison list' });
-    }
-
-    // CRITICAL: Mark the field as modified
-    user.markModified('comparisonList');
-    await user.save();
-    
-    console.log('💾 User saved successfully');
-
-    // Verify the save worked
-    const verifiedUser = await User.findById(userId);
-    console.log('🔍 Verification - comparison list size:', verifiedUser.comparisonList?.length || 0);
+    // Verify with fresh query
+    const verifiedUser = await User.findById(userId).select('comparisonList');
+    console.log('🔍 Fresh query verification:', verifiedUser.comparisonList?.length || 0);
 
     res.json({
       message: 'Property removed from comparison',
-      comparisonList: user.comparisonList,
-      verifiedSize: verifiedUser.comparisonList?.length || 0
+      comparisonList: updatedUser.comparisonList || [],
+      count: updatedUser.comparisonList?.length || 0
     });
 
   } catch (error) {
