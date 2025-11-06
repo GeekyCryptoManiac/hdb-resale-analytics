@@ -25,7 +25,7 @@ function AnalyticsPage() {
   // Fetch town comparison
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/analytics/town-comparison')
+      .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
       .then((res) => setTowns(res.data.data || []))
       .catch((err) => console.error(err));
   }, []);
@@ -33,7 +33,7 @@ function AnalyticsPage() {
   // Fetch average price by year & town
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/analytics/get-price-avg')
+      .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
       .then((res) => {
         const data = res.data.data || [];
         setAvgPriceData(data);
@@ -48,7 +48,7 @@ function AnalyticsPage() {
   // Fetch price distribution data
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/analytics/price-distribution')
+      .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
       .then((res) => setPriceDist(res.data))
       .catch((err) => console.error(err));
   }, []);
@@ -98,7 +98,7 @@ function AnalyticsPage() {
   // Fetch flat type comparison data
 useEffect(() => {
   axios
-    .get('http://localhost:5000/api/analytics/flat-type-comparison')
+    .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
     .then((res) => setFlatTypeData(res.data.data || []))
     .catch((err) => console.error(err));
 }, []);
