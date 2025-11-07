@@ -6,7 +6,7 @@ const { pool, testConnection } = require('../config/database');
 require('dotenv').config();
 
 // Configuration
-const DATA_FILE = process.env.DATA_FILE_PATH || path.join(__dirname, '../../database/data/Resaleflatprices_hdb.csv');
+const DATA_FILE = process.env.DATA_FILE_PATH || path.join(__dirname, '../../../database/data/hdb_resale_data.csv');
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE) || 1000;
 
 // In-memory caches for lookups

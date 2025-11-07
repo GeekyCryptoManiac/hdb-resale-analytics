@@ -10,6 +10,7 @@ const flatTypeRoutes = require('./src/routes/flatTypeRoutes');
 const propertyRoutes = require('./src/routes/propertyRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const authRoutes = require('./src/routes/authRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 
 
@@ -42,6 +43,7 @@ app.use((req, res, next) => {
 
 // Login Route
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 const mongoose = require("mongoose");
 
