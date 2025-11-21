@@ -33,7 +33,7 @@ function AnalyticsPage() {
   // Fetch average price by year & town
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
+      .get(`${process.env.REACT_APP_API_URL}/analytics/get-price-avg`)
       .then((res) => {
         const data = res.data.data || [];
         setAvgPriceData(data);
@@ -48,7 +48,7 @@ function AnalyticsPage() {
   // Fetch price distribution data
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
+      .get(`${process.env.REACT_APP_API_URL}/analytics/price-distribution`)
       .then((res) => setPriceDist(res.data))
       .catch((err) => console.error(err));
   }, []);
@@ -98,7 +98,7 @@ function AnalyticsPage() {
   // Fetch flat type comparison data
 useEffect(() => {
   axios
-    .get(`${process.env.REACT_APP_API_URL}/analytics/town-comparison`)
+    .get(`${process.env.REACT_APP_API_URL}/analytics/flat-type-comparison`)
     .then((res) => setFlatTypeData(res.data.data || []))
     .catch((err) => console.error(err));
 }, []);
