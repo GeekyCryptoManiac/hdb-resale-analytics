@@ -21,4 +21,7 @@ router.get('/price-distribution', analyticsController.getPriceDistribution);
 // GET /api/analytics/get-price-avg - Get price avg
 router.get('/get-price-avg', analyticsController.getPriceAvg);
 
+// GET /api/analytics/heatmap - Heat map data
+router.get('/heatmap', analyticsController.getHeatmapData);
+
 module.exports = router;

@@ -1,26 +1,31 @@
 // src/pages/SearchPage.jsx
 import React, { useEffect, useState } from "react";
 import { Container, Card, Row, Col, Form, Button, Alert, Spinner } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getTowns, getFlatTypes } from "../services/api";
 
 function SearchPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [towns, setTowns] = useState([]);
   const [flatTypes, setFlatTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    towns: [], // Changed to array for multiple selection
-    flatType: "",
-    minPrice: "",
-    maxPrice: "",
-    minFloorArea: "",
-    maxFloorArea: "",
-    minRemainingLease: "",
-    sortBy: "",
-    sortOrder: ""
-  });
-
-  const navigate = useNavigate();
+  
+  // ✅ FIXED: Initialize filters from location.state if coming from heatmap
+  const [filters, setFilters] = useState(
+    location.state?.filters || {
+      towns: [],
+      flatType: "",
+      minPrice: "",
+      maxPrice: "",
+      minFloorArea: "",
+      maxFloorArea: "",
+      minRemainingLease: "",
+      sortBy: "",
+      sortOrder: ""
+    }
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,6 +42,13 @@ function SearchPage() {
     };
     loadData();
   }, []);
+
+  // ✅ FIXED: Update filters when location.state changes (e.g., from heatmap navigation)
+  useEffect(() => {
+    if (location.state?.filters) {
+      setFilters(location.state.filters);
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,6 +71,10 @@ function SearchPage() {
     navigate("/results", { state: { filters } });
   };
 
+  // ✅ NEW: Check if we came from heatmap (has pre-filled filters)
+  const isFromHeatmap = location.state?.filters?.towns?.length > 0 && 
+                       location.state?.filters?.flatType === '';
+
   return (
     <Container className="mt-4">
       <Card className="mb-4">
@@ -66,6 +82,18 @@ function SearchPage() {
           <Card.Title>
             <h2>Enter HDB Apartment Details</h2>
           </Card.Title>
+
+          {/* ✅ NEW: Show alert if coming from heatmap */}
+          {isFromHeatmap && (
+            <Alert variant="info" className="mb-3">
+              <strong>🗺️ Search pre-filled from Market Heatmap</strong>
+              <p className="mb-0 mt-1">
+                Selected town: <strong>{filters.towns.join(', ')}</strong>
+                <br />
+                <small>You can modify filters below or search directly.</small>
+              </p>
+            </Alert>
+          )}
 
           {loading ? (
             <Spinner animation="border" />
