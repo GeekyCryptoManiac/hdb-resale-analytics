@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
 
+// ============= EXISTING ROUTES =============
 // GET /api/analytics/statistics - Get overall statistics
 router.get('/statistics', analyticsController.getOverallStatistics);
 
@@ -23,5 +24,12 @@ router.get('/get-price-avg', analyticsController.getPriceAvg);
 
 // GET /api/analytics/heatmap - Heat map data
 router.get('/heatmap', analyticsController.getHeatmapData);
+
+// ============= NEW ROUTES FOR PROPERTY DETAIL PAGE =============
+// GET /api/analytics/town-trends - Get price trends for town/flat type
+router.get('/town-trends', analyticsController.getTownTrends);
+
+// POST /api/analytics/predict - Get price predictions
+router.post('/predict', analyticsController.getPricePrediction);
 
 module.exports = router;

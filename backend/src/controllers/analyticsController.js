@@ -623,6 +623,256 @@ async function getHeatmapData(req, res, next) {
     }
 }
 
+/**
+ * 🆕 NEW: Get price trends for a town and flat type over time
+ * For PropertyDetailPage - shows historical trends chart
+ * GET /api/analytics/town-trends
+ */
+async function getTownTrends(req, res, next) {
+    const { town_name, flat_type } = req.query;
+    
+    if (!town_name || !flat_type) {
+        return res.status(400).json({ 
+            success: false,
+            error: 'town_name and flat_type are required' 
+        });
+    }
+    
+    try {
+        const query = `
+            SELECT 
+                t.month,
+                AVG(t.price) as avg_price,
+                COUNT(*) as transaction_count,
+                MIN(t.price) as min_price,
+                MAX(t.price) as max_price
+            FROM Transaction t
+            JOIN Block b ON t.block_id = b.block_id
+            JOIN Town town ON b.town_id = town.town_id
+            JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+            WHERE town.town_name = ? 
+                AND ft.flat_type_name = ?
+                AND t.month >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
+            GROUP BY t.month
+            ORDER BY t.month ASC
+        `;
+        
+        const [rows] = await pool.query(query, [town_name, flat_type]);
+        
+        res.json({ 
+            success: true, 
+            data: rows 
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+// Updated getPricePrediction function for analyticsController.js
+
+async function getPricePrediction(req, res, next) {
+    try {
+        const { town_name, flat_type_name, floor_area_sqm } = req.body;
+
+        // Validate inputs
+        if (!town_name || !flat_type_name || !floor_area_sqm) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required parameters'
+            });
+        }
+
+        const floorAreaMin = parseFloat(floor_area_sqm) - 15;
+        const floorAreaMax = parseFloat(floor_area_sqm) + 15;
+
+        // STEP 1: Get Current Market Value (last 12 months)
+        const currentMarketQuery = `
+            SELECT 
+                AVG(t.price) as avg_price,
+                MIN(t.price) as min_price,
+                MAX(t.price) as max_price,
+                COUNT(*) as sample_size
+            FROM Transaction t
+            JOIN Block b ON t.block_id = b.block_id
+            JOIN Town town ON b.town_id = town.town_id
+            JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+            WHERE town.town_name = ?
+              AND ft.flat_type_name = ?
+              AND t.floor_area_sqm BETWEEN ? AND ?
+              AND t.month >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 12 MONTH), '%Y-%m')
+        `;
+
+        const [currentRows] = await pool.query(currentMarketQuery, [
+            town_name,
+            flat_type_name,
+            floorAreaMin,
+            floorAreaMax
+        ]);
+
+        const currentData = currentRows[0];
+
+        // If no data, try without floor area constraint (fallback)
+        if (!currentData.sample_size || currentData.sample_size === 0) {
+            const fallbackQuery = `
+                SELECT 
+                    AVG(t.price) as avg_price,
+                    MIN(t.price) as min_price,
+                    MAX(t.price) as max_price,
+                    COUNT(*) as sample_size
+                FROM Transaction t
+                JOIN Block b ON t.block_id = b.block_id
+                JOIN Town town ON b.town_id = town.town_id
+                JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+                WHERE town.town_name = ?
+                  AND ft.flat_type_name = ?
+                  AND t.month >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 12 MONTH), '%Y-%m')
+            `;
+
+            const [fallbackRows] = await pool.query(fallbackQuery, [town_name, flat_type_name]);
+            const fallbackData = fallbackRows[0];
+
+            if (!fallbackData.sample_size || fallbackData.sample_size === 0) {
+                return res.json({
+                    success: true,
+                    data: {
+                        error: 'Insufficient recent data for prediction',
+                        sample_size: 0
+                    }
+                });
+            }
+
+            // Use fallback data and mark it
+            Object.assign(currentData, fallbackData);
+        }
+
+        // STEP 2: Calculate Historical Growth Rate (last 3 years)
+        const historicalGrowthQuery = `
+            WITH yearly_avg AS (
+                SELECT 
+                    YEAR(STR_TO_DATE(CONCAT(t.month, '-01'), '%Y-%m-%d')) as year,
+                    AVG(t.price) as avg_price,
+                    COUNT(*) as transactions
+                FROM Transaction t
+                JOIN Block b ON t.block_id = b.block_id
+                JOIN Town town ON b.town_id = town.town_id
+                JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+                WHERE town.town_name = ?
+                  AND ft.flat_type_name = ?
+                  AND t.floor_area_sqm BETWEEN ? AND ?
+                  AND t.month >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 3 YEAR), '%Y-%m')
+                GROUP BY YEAR(STR_TO_DATE(CONCAT(t.month, '-01'), '%Y-%m-%d'))
+                HAVING COUNT(*) >= 5
+                ORDER BY year ASC
+            )
+            SELECT 
+                year,
+                avg_price,
+                transactions,
+                LAG(avg_price) OVER (ORDER BY year) as prev_year_price
+            FROM yearly_avg
+        `;
+
+        const [growthRows] = await pool.query(historicalGrowthQuery, [
+            town_name,
+            flat_type_name,
+            floorAreaMin,
+            floorAreaMax
+        ]);
+
+        // Calculate average year-over-year growth rate
+        let historicalGrowthRate = 0.04; // Default 4% if insufficient historical data
+        let hasHistoricalData = false;
+
+        if (growthRows.length >= 2) {
+            const growthRates = [];
+            
+            for (let row of growthRows) {
+                if (row.prev_year_price) {
+                    const yoyGrowth = (row.avg_price - row.prev_year_price) / row.prev_year_price;
+                    // Cap extreme values between -20% and +30%
+                    const cappedGrowth = Math.max(-0.20, Math.min(0.30, yoyGrowth));
+                    growthRates.push(cappedGrowth);
+                }
+            }
+
+            if (growthRates.length > 0) {
+                historicalGrowthRate = growthRates.reduce((sum, rate) => sum + rate, 0) / growthRates.length;
+                hasHistoricalData = true;
+            }
+        }
+
+        // STEP 3: Calculate Predictions
+        const currentAvg = parseFloat(currentData.avg_price);
+        
+        const conservativeRate = historicalGrowthRate * 0.70;
+        const mostLikelyRate = historicalGrowthRate * 1.00;
+        const optimisticRate = historicalGrowthRate * 1.30;
+
+        const predictions = {
+            current_min: parseFloat(currentData.min_price),
+            current_max: parseFloat(currentData.max_price),
+            current_avg: currentAvg,
+            
+            conservative: Math.round(currentAvg * Math.pow(1 + conservativeRate, 2)),
+            most_likely: Math.round(currentAvg * Math.pow(1 + mostLikelyRate, 2)),
+            optimistic: Math.round(currentAvg * Math.pow(1 + optimisticRate, 2)),
+            
+            conservative_change: ((Math.pow(1 + conservativeRate, 2) - 1) * 100).toFixed(1),
+            most_likely_change: ((Math.pow(1 + mostLikelyRate, 2) - 1) * 100).toFixed(1),
+            optimistic_change: ((Math.pow(1 + optimisticRate, 2) - 1) * 100).toFixed(1),
+            
+            sample_size: parseInt(currentData.sample_size),
+            historical_growth_rate: (historicalGrowthRate * 100).toFixed(1),
+            has_historical_data: hasHistoricalData
+        };
+
+        // STEP 4: Confidence and Warnings
+        const sampleSize = predictions.sample_size;
+        
+        if (sampleSize < 20) {
+            predictions.warning = 'limited_data';
+            predictions.warning_message = 'Limited data available - use predictions with caution';
+            predictions.confidence = Math.max(40, 50 + sampleSize);
+        } else if (sampleSize < 50) {
+            predictions.confidence = 70;
+            predictions.warning_message = 'Moderate data availability';
+        } else if (sampleSize < 100) {
+            predictions.confidence = 80;
+        } else {
+            predictions.confidence = 90;
+        }
+
+        if (!hasHistoricalData) {
+            predictions.methodology_note = 'Using market average growth rate due to limited historical data';
+        }
+
+        console.log('Prediction generated:', {
+            town_name,
+            flat_type_name,
+            sample_size: sampleSize,
+            historical_rate: predictions.historical_growth_rate,
+            confidence: predictions.confidence
+        });
+
+        res.json({
+            success: true,
+            data: predictions
+        });
+
+    } catch (error) {
+        console.error('Error in getPricePrediction:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate prediction',
+            details: error.message
+        });
+    }
+}
+
+module.exports = { getPricePrediction };
+
+
 module.exports = {
     getOverallStatistics,
     getPriceTrends,
@@ -630,7 +880,9 @@ module.exports = {
     getFlatTypeComparison,
     getPriceDistribution,
     getPriceAvg,
-    getTopAppreciatingTowns,      // 🆕 NEW EXPORT
-    getLeaseDepreciation,          // 🆕 NEW EXPORT
-    getHeatmapData                 // 🆕 NEW EXPORT
+    getTopAppreciatingTowns,
+    getLeaseDepreciation,
+    getHeatmapData,
+    getTownTrends,              // 🆕 NEW EXPORT
+    getPricePrediction          // 🆕 NEW EXPORT
 };

@@ -1,5 +1,7 @@
 // backend/src/controllers/propertyController.js
 const propertyModel = require('../models/mysql/propertyModel');
+const { pool } = require('../config/database');
+
 /**
  * Search properties with filters
  * GET /api/properties/search
@@ -66,13 +68,39 @@ async function searchProperties(req, res, next) {
 /**
  * Get property by transaction ID
  * GET /api/properties/:id
+ * ✨ ENHANCED: Returns full property details with all JOINs
  */
 async function getPropertyById(req, res, next) {
     try {
         const transactionId = req.params.id;
-        const property = await propertyModel.getPropertyById(transactionId);
         
-        if (!property) {
+        const query = `
+            SELECT 
+                t.transaction_id,
+                t.month,
+                t.price,
+                t.floor_area_sqm,
+                b.block_number,
+                b.street_name,
+                town.town_name,
+                ft.flat_type_name,
+                fm.flat_model_name,
+                sr.range AS storey_range,
+                l.remaining_lease_years,
+                l.remaining_lease_months
+            FROM Transaction t
+            JOIN Block b ON t.block_id = b.block_id
+            JOIN Town town ON b.town_id = town.town_id
+            JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+            JOIN FlatModel fm ON t.flat_model_id = fm.flat_model_id
+            JOIN StoreyRange sr ON t.storey_id = sr.storey_id
+            JOIN Lease l ON t.lease_id = l.lease_id
+            WHERE t.transaction_id = ?
+        `;
+        
+        const [rows] = await pool.query(query, [transactionId]);
+        
+        if (!rows || rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Property not found'
@@ -81,7 +109,7 @@ async function getPropertyById(req, res, next) {
         
         res.json({
             success: true,
-            data: property
+            data: rows[0]
         });
     } catch (error) {
         next(error);
@@ -107,8 +135,57 @@ async function getRecentTransactions(req, res, next) {
     }
 }
 
+/**
+ * 🆕 NEW: Get block transaction history
+ * GET /api/properties/block-history
+ * Query params: block_number, street_name
+ * 
+ * Returns all transactions for a specific block (up to 50 most recent)
+ */
+async function getBlockHistory(req, res, next) {
+    const { block_number, street_name } = req.query;
+    
+    if (!block_number || !street_name) {
+        return res.status(400).json({ 
+            success: false,
+            error: 'block_number and street_name are required' 
+        });
+    }
+    
+    try {
+        const query = `
+            SELECT 
+                t.transaction_id,
+                t.month,
+                t.price,
+                t.floor_area_sqm,
+                ft.flat_type_name,
+                sr.range AS storey_range,
+                l.remaining_lease_years
+            FROM Transaction t
+            JOIN Block b ON t.block_id = b.block_id
+            JOIN FlatType ft ON t.flat_type_id = ft.flat_type_id
+            JOIN StoreyRange sr ON t.storey_id = sr.storey_id
+            JOIN Lease l ON t.lease_id = l.lease_id
+            WHERE b.block_number = ? AND b.street_name = ?
+            ORDER BY t.month DESC
+            LIMIT 50
+        `;
+        
+        const [rows] = await pool.query(query, [block_number, street_name]);
+        
+        res.json({ 
+            success: true, 
+            data: rows 
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     searchProperties,
     getPropertyById,
-    getRecentTransactions
+    getRecentTransactions,
+    getBlockHistory          // 🆕 NEW EXPORT
 };

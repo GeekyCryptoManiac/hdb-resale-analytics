@@ -35,7 +35,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/results" element={<ResultsPage />} />
-            <Route path="/property/:id" element={<PropertyDetailPage />} />
+            <Route path="/property/:transactionId" element={<PropertyDetailPage />} />
 
             {/* Protected routes */}
             <Route

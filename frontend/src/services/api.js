@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Base URL for backend API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -248,6 +248,71 @@ export const getFlatTypeComparison = async () => {
 export const getPriceDistribution = async (bucketSize = 50000) => {
   const response = await api.get(`/analytics/price-distribution?bucketSize=${bucketSize}`);
   return response.data;
+};
+
+// API Service Functions for PropertyDetail.jsx
+// Add these to your existing src/services/api.js file
+
+/**
+ * Get detailed information for a specific property transaction
+ */
+export const getPropertyDetails = async (transactionId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/properties/${transactionId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching property details:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get transaction history for a specific block
+ */
+export const getBlockHistory = async (blockNumber, streetName) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/properties/block-history`, {
+      params: {
+        block_number: blockNumber,
+        street_name: streetName
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching block history:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get price trends for a town and flat type over time
+ */
+export const getTownTrends = async (townName, flatType) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/analytics/town-trends`, {
+      params: {
+        town_name: townName,
+        flat_type: flatType
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching town trends:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get price prediction for similar properties
+ */
+export const getPricePrediction = async (propertyParams) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/analytics/predict`, propertyParams);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching price prediction:", error);
+    throw error;
+  }
 };
 
 // Export api instance for custom requests

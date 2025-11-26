@@ -47,6 +47,28 @@ const userSchema = new mongoose.Schema({
       message: 'comparisonList must be an array'
     }
   },
+  // 🆕 NEW TRACKING FIELDS
+  searchHistory: [{
+    query: mongoose.Schema.Types.Mixed,  // Flexible search criteria
+    timestamp: { type: Date, default: Date.now },
+    resultsCount: Number
+  }],
+  
+  viewedProperties: [{
+    transaction_id: { type: Number, required: true },
+    timestamp: { type: Date, default: Date.now },
+    viewCount: { type: Number, default: 1 }
+  }],
+  
+  favorites: [{
+    transaction_id: { type: Number, required: true },
+    addedAt: { type: Date, default: Date.now }
+  }],
+  
+  preferences: {
+    type: mongoose.Schema.Types.Mixed,  // Flexible user preferences
+    default: {}
+  },
   createdAt: {
     type: Date,
     default: Date.now
