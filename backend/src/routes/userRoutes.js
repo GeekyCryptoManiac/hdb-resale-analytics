@@ -356,9 +356,22 @@ router.get('/:userId/viewed-properties', async (req, res) => {
 router.post('/:userId/track-search', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { timestamp, resultsCount, ...searchQuery } = req.body;
+    const { 
+      timestamp, 
+      resultsCount, 
+      towns,
+      flat_type,
+      min_price,
+      max_price,
+      floor_area_min,
+      floor_area_max,
+      min_remaining_lease,
+      sort_by,
+      sort_order
+    } = req.body;
 
-    console.log('🔍 Track search - User:', userId, 'Query:', searchQuery);
+    console.log('🔍 Track search - User:', userId);
+    console.log('📦 Received data:', req.body); // Debug log
 
     const user = await User.findById(userId);
     
@@ -375,12 +388,22 @@ router.post('/:userId/track-search', async (req, res) => {
       user.searchHistory = [];
     }
 
-    // Add search to history
+    // ✅ CORRECT: Save individual fields at top level
     user.searchHistory.push({
-      query: searchQuery,
+      towns: towns || [],
+      flat_type: flat_type || null,
+      min_price: min_price ? Number(min_price) : null,
+      max_price: max_price ? Number(max_price) : null,
+      floor_area_min: floor_area_min ? Number(floor_area_min) : null,
+      floor_area_max: floor_area_max ? Number(floor_area_max) : null,
+      min_remaining_lease: min_remaining_lease ? Number(min_remaining_lease) : null,
+      sort_by: sort_by || null,
+      sort_order: sort_order || null,
       timestamp: new Date(timestamp || Date.now()),
-      resultsCount: resultsCount || 0
+      resultsCount: resultsCount || null
     });
+
+    console.log('📝 Search history entry:', user.searchHistory[user.searchHistory.length - 1]);
 
     // Keep only last 50 searches
     if (user.searchHistory.length > 50) {

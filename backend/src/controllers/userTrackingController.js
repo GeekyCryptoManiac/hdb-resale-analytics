@@ -75,50 +75,76 @@ exports.trackPropertyView = async (req, res) => {
  * Track search query
  * POST /api/users/:userId/track-search
  */
+/**
+ * Track search query
+ * POST /api/users/:userId/track-search
+ */
 exports.trackSearch = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { timestamp, resultsCount, ...searchQuery } = req.body;
-
-    const user = await User.findById(userId);
-    
-    if (!user) {
-      return res.status(404).json({
+    try {
+      const { userId } = req.params;
+      const { 
+        timestamp, 
+        resultsCount, 
+        towns,
+        flat_type,
+        min_price,
+        max_price,
+        floor_area_min,
+        floor_area_max,
+        min_remaining_lease,
+        sort_by,
+        sort_order
+      } = req.body;
+  
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+  
+      // Add search to history with individual fields (not nested in 'query')
+      user.searchHistory.push({
+        towns: towns || [],
+        flat_type: flat_type || null,
+        min_price: min_price ? Number(min_price) : null,
+        max_price: max_price ? Number(max_price) : null,
+        floor_area_min: floor_area_min ? Number(floor_area_min) : null,
+        floor_area_max: floor_area_max ? Number(floor_area_max) : null,
+        min_remaining_lease: min_remaining_lease ? Number(min_remaining_lease) : null,
+        sort_by: sort_by || null,
+        sort_order: sort_order || null,
+        timestamp: new Date(timestamp || Date.now()),
+        resultsCount: resultsCount || null
+      });
+  
+      // Keep only last 50 searches
+      if (user.searchHistory.length > 50) {
+        user.searchHistory = user.searchHistory
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, 50);
+      }
+  
+      await user.save();
+  
+      console.log('✅ Search tracked for user:', userId);
+  
+      res.json({
+        success: true,
+        message: 'Search tracked'
+      });
+  
+    } catch (error) {
+      console.error('Error tracking search:', error);
+      res.status(500).json({
         success: false,
-        error: 'User not found'
+        error: 'Failed to track search',
+        details: error.message
       });
     }
-
-    // Add search to history
-    user.searchHistory.push({
-      query: searchQuery,
-      timestamp: new Date(timestamp || Date.now()),
-      resultsCount: resultsCount || 0
-    });
-
-    // Keep only last 50 searches
-    if (user.searchHistory.length > 50) {
-      user.searchHistory = user.searchHistory
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 50);
-    }
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Search tracked'
-    });
-
-  } catch (error) {
-    console.error('Error tracking search:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to track search',
-      details: error.message
-    });
-  }
-};
+  };
 
 /**
  * Get user's search history

@@ -59,14 +59,19 @@ const userSchema = new mongoose.Schema({
   },
   
   // 🆕 NEW: Search history tracking
-  searchHistory: {
-    type: [{
-      query: mongoose.Schema.Types.Mixed,
-      timestamp: { type: Date, default: Date.now },
-      resultsCount: Number
-    }],
-    default: []
-  },
+  searchHistory: [{
+    towns: [String],           // ["WOODLANDS", "TAMPINES"]
+    flat_type: String,         // "4 ROOM"
+    min_price: Number,         // 300000
+    max_price: Number,         // 500000
+    floor_area_min: Number,    // 80
+    floor_area_max: Number,    // 110
+    min_remaining_lease: Number,
+    sort_by: String,
+    sort_order: String,
+    timestamp: { type: Date, default: Date.now },
+    resultsCount: Number
+  }],
   
   // 🆕 NEW: Favorites
   favorites: {

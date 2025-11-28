@@ -6,6 +6,9 @@ import PropertyCard from "../components/PropertyCard";
 import StatsBar from "../components/StatsBar";
 import { searchProperties } from "../services/api";
 
+//Might put the recommendations here
+import RecommendationsSection from '../components/RecommendationsSection';
+
 function ResultsPage() {
   const navigate = useNavigate();
   const location = useLocation();

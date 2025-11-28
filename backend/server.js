@@ -11,6 +11,7 @@ const propertyRoutes = require('./src/routes/propertyRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const recommendationsRoutes = require('./src/routes/recommendationsRoutes');
 
 
 
@@ -92,6 +93,7 @@ app.use('/api/towns', townRoutes);
 app.use('/api/flat-types', flatTypeRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/recommendations', recommendationsRoutes);
 
 // ============================================
 // ERROR HANDLING

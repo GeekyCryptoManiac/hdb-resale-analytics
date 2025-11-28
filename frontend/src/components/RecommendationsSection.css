@@ -1,0 +1,96 @@
+.recommendations-section {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 2rem 0;
+    border-radius: 10px;
+  }
+  
+  .recommendations-header h3 {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+  
+  .recommendation-icon {
+    font-size: 1.8rem;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  
+  .property-recommendation-card {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: white;
+  }
+  
+  .property-recommendation-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .flat-type-badge, .town-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  
+  .property-address {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .property-price h4 {
+    font-weight: 700;
+    font-size: 1.6rem;
+  }
+  
+  .property-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+  }
+  
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+  
+  .detail-icon {
+    font-size: 1rem;
+  }
+  
+  .view-details-btn {
+    text-align: right;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .property-recommendation-card:hover .view-details-btn {
+    transform: translateX(5px);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .recommendations-section {
+      padding: 1.5rem 0;
+    }
+    
+    .property-price h4 {
+      font-size: 1.4rem;
+    }
+  }

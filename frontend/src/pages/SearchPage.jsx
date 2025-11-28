@@ -1,18 +1,21 @@
 // src/pages/SearchPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Container, Card, Row, Col, Form, Button, Alert, Spinner } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getTowns, getFlatTypes } from "../services/api";
+import { trackSearch } from "../services/mongoApi";
+import { AuthContext } from "../context/AuthContext";
+import RecommendationsSection from "../components/RecommendationsSection";
 
 function SearchPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useContext(AuthContext);
   
   const [towns, setTowns] = useState([]);
   const [flatTypes, setFlatTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // ✅ FIXED: Initialize filters from location.state if coming from heatmap
   const [filters, setFilters] = useState(
     location.state?.filters || {
       towns: [],
@@ -43,7 +46,6 @@ function SearchPage() {
     loadData();
   }, []);
 
-  // ✅ FIXED: Update filters when location.state changes (e.g., from heatmap navigation)
   useEffect(() => {
     if (location.state?.filters) {
       setFilters(location.state.filters);
@@ -66,24 +68,46 @@ function SearchPage() {
     });
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
+    
+    if (user?._id) {
+      try {
+        await trackSearch(user._id, {
+          towns: filters.towns,
+          flat_type: filters.flatType,
+          min_price: filters.minPrice || null,
+          max_price: filters.maxPrice || null,
+          floor_area_min: filters.minFloorArea || null,
+          floor_area_max: filters.maxFloorArea || null,
+          min_remaining_lease: filters.minRemainingLease || null,
+          sort_by: filters.sortBy || null,
+          sort_order: filters.sortOrder || null,
+          resultsCount: null
+        });
+        console.log('✅ Search tracked successfully');
+      } catch (error) {
+        console.error('⚠️ Failed to track search:', error);
+      }
+    }
+    
     navigate("/results", { state: { filters } });
   };
 
-  // ✅ NEW: Check if we came from heatmap (has pre-filled filters)
   const isFromHeatmap = location.state?.filters?.towns?.length > 0 && 
                        location.state?.filters?.flatType === '';
 
   return (
     <Container className="mt-4">
+      {/* 🆕 ADD RECOMMENDATIONS SECTION HERE - ABOVE SEARCH FORM */}
+      <RecommendationsSection user={user} />
+
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>
             <h2>Enter HDB Apartment Details</h2>
           </Card.Title>
 
-          {/* ✅ NEW: Show alert if coming from heatmap */}
           {isFromHeatmap && (
             <Alert variant="info" className="mb-3">
               <strong>🗺️ Search pre-filled from Market Heatmap</strong>
@@ -99,6 +123,7 @@ function SearchPage() {
             <Spinner animation="border" />
           ) : (
             <Form onSubmit={handleSearch}>
+              {/* ... rest of your form code stays the same ... */}
               <Row className="mb-3">
                 <Col md={12}>
                   <Form.Group>
