@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require("../middleware/authMiddleware");
 
 // REGISTER
 router.post('/register', async (req, res) => {
@@ -71,5 +72,22 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+//Update
+router.put("/update", authMiddleware, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const updateData = { name, email };
+    if (password) updateData.password = await bcrypt.hash(password, 10);
+
+    await User.findByIdAndUpdate(req.user.id, updateData);
+
+    res.json({ message: "Profile updated" });
+  } catch (err) {
+    res.status(500).json({ message: "Update error" });
+  }
+});
+
 
 module.exports = router;
