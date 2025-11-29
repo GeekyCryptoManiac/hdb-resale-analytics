@@ -103,7 +103,8 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{ 
       user, 
       token, 
-      login, 
+      login,
+      setUser,
       register, 
       logout,
       updateComparisonList 
