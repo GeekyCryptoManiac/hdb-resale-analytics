@@ -205,8 +205,3 @@ REACT_APP_API_BASE=http://localhost:5000
 This project is for academic use under the SIT INF2003 project requirements.
 
 ---
-
-If you want, I can also create:
-• A matching frontend README
-• Full API documentation
-• A Swagger/OpenAPI file for your backend
