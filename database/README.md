@@ -1,106 +1,195 @@
-# HDB Resale Price Analytics Platform
+# HDB Resale Analytics Database
 
-INF2003 Database Systems Group Project - Team 15
+MySQL • MongoDB • Dual-Database Design
 
-## Team Members
-- Ngo Cheng En Owen
-- Muhammad Daffa Ramadhan
-- Mohammed Shaqeel Bin Mohammed Sidek
-- Alyssa Yu
-- Tan Guan Teng
-- Beatrice Tan Jie Ting
+This folder contains all database resources for the HDB Resale Analytics platform.
+MySQL stores structured HDB resale transactions.
+MongoDB stores user behaviour data such as profiles, comparison lists, and search history.
 
-## Project Overview
-A dual-database application for analyzing HDB resale prices in Singapore, demonstrating both relational (MySQL) and non-relational (MongoDB) database implementations.
+---
 
-### Tech Stack
-- **Frontend:** React.js
-- **Backend:** Express.js (Node.js)
-- **Databases:** MySQL 8.0+, MongoDB
-- **Data:** 200,000+ HDB resale transactions (2017-2025)
-
-## Setup Instructions
-
-### Prerequisites
-- Node.js 18+ and npm
-- MySQL 8.0+
-- MongoDB (coming soon)
-
-### Database Setup
-
-1. **Install MySQL** (if not already installed):
-```bash
-   brew install mysql
-   brew services start mysql
-```
-
-2. **Create the database and tables:**
-```bash
-   mysql -u root -p
-   SOURCE database/mysql/init_master.sql;
-   exit;
-```
-
-3. **Download HDB Data:**
-   - Go to: https://data.gov.sg/datasets/d_8b84c4ee58e3cfc0ece0d773c8ca6abc/view
-   - Download the CSV file
-   - Save as: `database/data/hdb_resale_data.csv`
-
-4. **Configure environment:**
-```bash
-   cd backend
-   cp .env.example .env
-   # Edit .env and add your MySQL password
-```
-
-5. **Install dependencies:**
-```bash
-   npm install
-```
-
-6. **Import HDB data:**
-```bash
-   node scripts/import_hdb_data.js
-```
-   This will take ~10-15 minutes and import 200,000+ transactions.
-
-7. **Verify import:**
-```bash
-   mysql -u root -p < database/mysql/queries/verify_import.sql
-```
-
-## Database Schema
+## Overview
 
 ### MySQL (Relational)
-- **7 normalized tables:** Town, Block, FlatType, FlatModel, StoreyRange, Lease, Transaction
-- **200,000+ transactions** with full referential integrity
-- **Complex relationships:** Many-to-one, enforced foreign keys
 
-### MongoDB (NoSQL) - Coming Soon
-- User profiles and preferences
-- Search history
-- Flexible schema for behavioral data
+Used for:
 
-## Project Structure
+* HDB resale transactions
+* Flat types, towns, leases, floor areas
+* Historical price data
+* Structured analytics
+
+### MongoDB (Non-Relational)
+
+Used for:
+
+* User accounts
+* Comparison lists
+* Search history
+* Flexible behavioural data
+
+---
+
+## Folder Structure
+
 ```
-hdb-resale-analytics/
-├── backend/              # Express.js API
-│   ├── config/          # Database connections
-│   └── scripts/         # Data import scripts
-├── database/
-│   ├── mysql/           # SQL schemas and scripts
-│   └── mongodb/         # MongoDB schemas (TBD)
-├── frontend/            # React.js UI (TBD)
-└── docs/                # Project documentation
+database/
+├── data/                  # CSV and raw data files
+├── mysql/
+│   ├── schema.sql         # MySQL schema
+│   ├── queries/           # Testing and verification queries
+│   └── init_master.sql    # Combined schema setup (if provided)
+├── mongodb/
+│   ├── schemas/           # User and behaviour schemas (if applicable)
+│   └── examples/          # Sample documents
+└── import.js              # Node script to import CSV into MySQL
 ```
 
-## Current Status
-- ✅ MySQL database schema complete
-- ✅ Data import script complete
-- ✅ 200k+ HDB transactions imported
-- 🔄 Backend API (in progress)
-- 🔄 Frontend UI (in progress)
-- ⏳ MongoDB setup (pending)
+---
+
+## MySQL Setup
+
+### 1. Create Database
+
+```sql
+CREATE DATABASE hdb_resale;
+```
+
+### 2. Apply Schema
+
+Run the schema file inside MySQL Workbench:
+
+```sql
+SOURCE database/mysql/schema.sql;
+```
+
+### 3. Import Resale Data
+
+Place the CSV file inside:
+
+```
+database/data/
+```
+
+Then run:
+
+```bash
+node import.js
+```
+
+The importer:
+
+* Loads records in batches
+* Validates and sanitizes transaction fields
+* Tracks progress in the console
+
+### 4. Verify Import
+
+Run provided queries:
+
+```bash
+mysql -u root -p < database/mysql/queries/verify_import.sql
+```
+
+---
+
+## MongoDB Setup
+
+### 1. Create MongoDB Cluster
+
+Use MongoDB Atlas (recommended).
+Create a database named:
+
+```
+hdbUsers
+```
+
+### 2. Collections Created Automatically
+
+Collections include:
+
+* users
+* comparisonList entries
+* search history (if implemented)
+
+Nothing needs to be manually created.
+The backend auto-creates documents when users interact with the system.
+
+---
+
+## Data Requirements
+
+### MySQL Transaction Data
+
+Supported columns (based on 2017–2025 resale dataset):
+
+* month
+* town
+* flat_type
+* flat_model
+* storey_range
+* floor_area_sqm
+* lease_commence_date
+* remaining_lease
+* resale_price
+
+### MongoDB User Data
+
+Objects stored include:
+
+* name
+* email
+* password (hashed)
+* comparisonList array
+* timestamps
+
+---
+
+## Notes on the Dual-Database Design
+
+MySQL is used for:
+
+* Large structured datasets
+* Queries with joins
+* Historical analytics
+
+MongoDB is used for:
+
+* Fast writes
+* Flexible schema
+* User-centric operations
+
+This separation improves:
+
+* Query performance
+* System scalability
+* Schema evolution flexibility
+
+---
+
+## Troubleshooting
+
+### MySQL Data Import Fails
+
+* Check CSV path
+* Ensure schema is created
+* Verify MySQL service is running
+* Confirm credentials match `.env` in backend
+
+### MongoDB Connection Fails
+
+* Allow IP access in Atlas
+* Check connection string
+* Test with MongoDB Compass
+
+### CSV Errors
+
+* Ensure UTF-8 encoding
+* Ensure correct column order
+* Remove invalid rows before import
+
+---
 
 ## License
-Academic project for SIT INF2003
+
+For academic use under SIT INF2003 project requirements.
