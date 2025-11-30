@@ -24,7 +24,7 @@ A dual-database application for analyzing HDB resale prices in Singapore, demons
 ### Prerequisites
 - Node.js 18+ and npm
 - MySQL 8.0+
-- MongoDB (coming soon)
+- MongoDB 
 
 ### Database Setup
 
