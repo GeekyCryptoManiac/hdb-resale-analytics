@@ -1,10 +1,12 @@
 # HDB Resale Analytics Database
 
-MySQL • MongoDB • Dual-Database Design
+MySQL • MongoDB Atlas • Dual-Database Design
 
 This folder contains all database resources for the HDB Resale Analytics platform.
 MySQL stores structured HDB resale transactions.
-MongoDB stores user behaviour data such as profiles, comparison lists, and search history.
+MongoDB Atlas stores user behaviour data such as user profiles and comparison lists.
+
+MongoDB Atlas is **already configured** and requires **no additional setup**.
 
 ---
 
@@ -15,18 +17,19 @@ MongoDB stores user behaviour data such as profiles, comparison lists, and searc
 Used for:
 
 * HDB resale transactions
-* Flat types, towns, leases, floor areas
-* Historical price data
-* Structured analytics
+* Flat and town attributes
+* Historical pricing analytics
+* Joins and structured queries
 
-### MongoDB (Non-Relational)
+### MongoDB Atlas (Non-Relational)
 
 Used for:
 
 * User accounts
 * Comparison lists
-* Search history
-* Flexible behavioural data
+* Behavioural data
+
+MongoDB Atlas is **fully deployed** and connected to the backend via environment variables.
 
 ---
 
@@ -34,15 +37,15 @@ Used for:
 
 ```
 database/
-├── data/                  # CSV and raw data files
+├── data/                       # CSV and raw datasets
 ├── mysql/
-│   ├── schema.sql         # MySQL schema
-│   ├── queries/           # Testing and verification queries
-│   └── init_master.sql    # Combined schema setup (if provided)
-├── mongodb/
-│   ├── schemas/           # User and behaviour schemas (if applicable)
-│   └── examples/          # Sample documents
-└── import.js              # Node script to import CSV into MySQL
+│   ├── schema.sql              # SQL schema for MySQL
+│   ├── queries/                # Validation and test queries
+│   └── init_master.sql         # Optional combined schema
+├── mongodb/                    # Document references and samples
+│   ├── schemas/
+│   └── examples/
+└── import.js                   # MySQL CSV import script
 ```
 
 ---
@@ -57,15 +60,15 @@ CREATE DATABASE hdb_resale;
 
 ### 2. Apply Schema
 
-Run the schema file inside MySQL Workbench:
+Run the schema file:
 
 ```sql
 SOURCE database/mysql/schema.sql;
 ```
 
-### 3. Import Resale Data
+### 3. Import HDB Resale Data
 
-Place the CSV file inside:
+Place your CSV file into:
 
 ```
 database/data/
@@ -77,15 +80,13 @@ Then run:
 node import.js
 ```
 
-The importer:
+The import script:
 
-* Loads records in batches
-* Validates and sanitizes transaction fields
-* Tracks progress in the console
+* Reads the CSV
+* Inserts records in batches
+* Shows progress in terminal
 
-### 4. Verify Import
-
-Run provided queries:
+### 4. Validate Import
 
 ```bash
 mysql -u root -p < database/mysql/queries/verify_import.sql
@@ -93,103 +94,61 @@ mysql -u root -p < database/mysql/queries/verify_import.sql
 
 ---
 
-## MongoDB Setup
+## MongoDB Atlas Setup
 
-### 1. Create MongoDB Cluster
+MongoDB Atlas is **already connected and configured**.
 
-Use MongoDB Atlas (recommended).
-Create a database named:
+The backend automatically interacts with Atlas to manage:
 
-```
-hdbUsers
-```
+* `users` collection
+* `comparisonList` embedded documents
+* Timestamps and updates
 
-### 2. Collections Created Automatically
-
-Collections include:
-
-* users
-* comparisonList entries
-* search history (if implemented)
-
-Nothing needs to be manually created.
-The backend auto-creates documents when users interact with the system.
+No local installation or manual setup is required.
 
 ---
 
 ## Data Requirements
 
-### MySQL Transaction Data
+### MySQL Data
 
-Supported columns (based on 2017–2025 resale dataset):
+Includes:
 
 * month
 * town
 * flat_type
 * flat_model
-* storey_range
 * floor_area_sqm
-* lease_commence_date
 * remaining_lease
 * resale_price
 
-### MongoDB User Data
+### MongoDB Atlas Data
 
-Objects stored include:
+Stored as flexible documents supporting:
 
-* name
-* email
-* password (hashed)
-* comparisonList array
-* timestamps
+* user profiles
+* saved property comparisons
+* behavioural metadata
 
 ---
 
-## Notes on the Dual-Database Design
+## Dual-Database Design Notes
 
-MySQL is used for:
+MySQL provides:
 
-* Large structured datasets
-* Queries with joins
-* Historical analytics
+* Structured and historical data
+* Strong relational consistency
 
-MongoDB is used for:
+MongoDB Atlas provides:
 
-* Fast writes
 * Flexible schema
-* User-centric operations
+* Faster user-centric writes
+* Cloud scalability
 
-This separation improves:
-
-* Query performance
-* System scalability
-* Schema evolution flexibility
-
----
-
-## Troubleshooting
-
-### MySQL Data Import Fails
-
-* Check CSV path
-* Ensure schema is created
-* Verify MySQL service is running
-* Confirm credentials match `.env` in backend
-
-### MongoDB Connection Fails
-
-* Allow IP access in Atlas
-* Check connection string
-* Test with MongoDB Compass
-
-### CSV Errors
-
-* Ensure UTF-8 encoding
-* Ensure correct column order
-* Remove invalid rows before import
+This combination supports performance and feature expansion.
 
 ---
 
 ## License
 
-For academic use under SIT INF2003 project requirements.
+Academic use under SIT INF2003 project requirements.
