@@ -94,6 +94,10 @@ hdb-resale-analytics/
 └── docs/                # Project documentation
 ```
 
+## Additional Project Documentation
+
+Check the backend, frontend, and database folders for their individual README files. Each folder includes setup steps, file structures, and module level explanations.
+
 
 ## License
 Academic project for SIT INF2003
