@@ -1,70 +1,198 @@
-# Getting Started with Create React App
+Here is the **frontend version** rewritten in the same structure and style as your backend README.
+You can paste this directly into `frontend/README.md`.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+# HDB Resale Analytics Frontend
 
-In the project directory, you can run:
+React.js • REST API • MySQL + MongoDB Integration
 
-### `npm start`
+The frontend provides the user interface for the HDB Resale Analytics platform.
+It communicates with the backend API to handle authentication, property search, user profiles, and comparison lists.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Features
 
-### `npm test`
+### Authentication
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* Login and registration
+* Form validation
+* JWT stored in localStorage
+* Auto-redirect for protected pages
 
-### `npm run build`
+### User Profile
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* View profile details
+* Update name or email
+* Sync updated user data in real time
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Property Search
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* Filter by town, flat type, floor area, and price
+* Fetch results through backend API
+* View transaction details
 
-### `npm run eject`
+### Comparison List
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* Add properties to user comparison list
+* Remove items
+* Data synced with MongoDB through backend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Project Structure
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+frontend/
+├── public/
+├── src/
+│   ├── components/
+│   ├── context/
+│   ├── pages/
+│   ├── utils/
+│   ├── App.js
+│   ├── index.js
+│   └── styles/
+└── package.json
+```
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Requirements
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+* Node.js 18 or newer
+* NPM
+* Backend server running
+* Git
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Installation
 
-### Analyzing the Bundle Size
+Clone the repository and install dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+``` 
+git clone https://github.com/GeekyCryptoManiac/hdb-resale-analytics.git
+cd hdb-resale-analytics/frontend
+npm install
+```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Environment Setup
 
-### Advanced Configuration
+Create a `.env` file in the `frontend` folder:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```
+REACT_APP_API_BASE=http://localhost:5000
+```
 
-### Deployment
+This must match your backend server URL.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## Running the Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Development Mode
+
+``` 
+npm start
+```
+
+Runs the app at:
+
+```
+http://localhost:3000
+```
+
+Hot reload is enabled.
+The browser refreshes automatically on changes.
+
+### Production Build
+
+``` 
+npm run build
+```
+
+Creates an optimized production bundle in `/build`.
+
+### Testing
+
+``` 
+npm test
+```
+
+Runs tests in watch mode.
+
+---
+
+## Connecting to the Backend
+
+The frontend uses this environment variable:
+
+```
+REACT_APP_API_BASE=http://localhost:5000
+```
+
+The frontend communicates with backend routes such as:
+
+```
+/api/auth/login
+/api/auth/register
+/api/users/update
+/api/properties/search
+/api/properties/compare
+```
+
+If the backend is offline, the app will fail to load data.
+
+---
+
+## Troubleshooting
+
+### Cannot Fetch Data
+
+* Check the backend is running
+* Confirm the `.env` API URL
+* Check browser console for network errors
+
+### CORS Issues
+
+* Backend must allow frontend origin
+* Restart backend after modifying CORS config
+
+### Login Not Working
+
+* Clear localStorage
+* Ensure backend returns a valid JWT
+
+### UI Not Updating
+
+* Check React state management in AuthContext
+* Ensure the backend returns updated user data after profile changes
+
+---
+
+## Deployment
+
+You can deploy using:
+
+* Netlify
+* Vercel
+* GitHub Pages
+* Any static hosting provider
+
+Make sure to set:
+
+```
+REACT_APP_API_BASE=<production-backend-url>
+```
+
+---
+
+## License
+
+This project is for academic use under SIT INF2003 project requirements.
+
+---
