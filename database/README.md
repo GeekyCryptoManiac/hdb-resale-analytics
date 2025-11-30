@@ -37,15 +37,10 @@ MongoDB Atlas is **fully deployed** and connected to the backend via environment
 
 ```
 database/
-├── data/                       # CSV and raw datasets
 ├── mysql/
 │   ├── schema.sql              # SQL schema for MySQL
 │   ├── queries/                # Validation and test queries
 │   └── init_master.sql         # Optional combined schema
-├── mongodb/                    # Document references and samples
-│   ├── schemas/
-│   └── examples/
-└── import.js                   # MySQL CSV import script
 ```
 
 ---
