@@ -1,8 +1,3 @@
-Here is the **frontend version** rewritten in the same structure and style as your backend README.
-You can paste this directly into `frontend/README.md`.
-
----
-
 # HDB Resale Analytics Frontend
 
 React.js • REST API • MySQL + MongoDB Integration
