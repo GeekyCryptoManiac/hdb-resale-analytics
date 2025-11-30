@@ -76,7 +76,7 @@ A dual-database application for analyzing HDB resale prices in Singapore, demons
 - **200,000+ transactions** with full referential integrity
 - **Complex relationships:** Many-to-one, enforced foreign keys
 
-### MongoDB (NoSQL) - Coming Soon
+### MongoDB (NoSQL)
 - User profiles and preferences
 - Search history
 - Flexible schema for behavioral data
@@ -94,13 +94,6 @@ hdb-resale-analytics/
 └── docs/                # Project documentation
 ```
 
-## Current Status
-- ✅ MySQL database schema complete
-- ✅ Data import script complete
-- ✅ 200k+ HDB transactions imported
-- 🔄 Backend API (in progress)
-- 🔄 Frontend UI (in progress)
-- ⏳ MongoDB setup (pending)
 
 ## License
 Academic project for SIT INF2003
